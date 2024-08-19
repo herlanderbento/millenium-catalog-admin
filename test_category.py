@@ -8,7 +8,7 @@ class TestCategory(unittest.TestCase):
       Category()
   
   def test_name_must_have_less_than_255_characters(self):
-    with self.assertRaisesRegex(ValueError, "Name must be less than 255 characters"):
+    with self.assertRaisesRegex(ValueError, "Name must be less than 256 characters"):
       Category(name="a" * 256)
 
 if __name__ == "__main__":

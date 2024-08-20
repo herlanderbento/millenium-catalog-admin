@@ -9,7 +9,7 @@ class TestCategory:
       Category()
   
   def test_name_must_have_less_than_255_characters(self):
-    with pytest.raises(ValueError, match="Name must be less than 256 characters"):
+    with pytest.raises(ValueError, match="name cannot be longer than 255"):
       Category(name="a" * 256)
 
   def test_category_must_be_created_with_id_as_uuid(self):
@@ -44,6 +44,10 @@ class TestCategory:
     assert category.description == "This is a test category"
     assert category.is_active is False
 
+  def test_cannot_create_category_with_empty_name(self):
+    with pytest.raises(ValueError, match="name cannot be empty"):
+      Category(name="")
+
   def test_str_method(self):
       category = Category("Category 1", description="Test description", is_active=True)
       expected_str = "Category 1 - Test description (True)"
@@ -54,3 +58,60 @@ class TestCategory:
     category = Category("Category 1", id=category_id)
     expected_repr = f"<Category Category 1 ({category_id})>"
     assert repr(category) == expected_repr
+
+
+class TestUpdateCategory:
+  def test_update_category_with_name_and_description(self):
+    category = Category(name="category", description="some description")
+
+    category.update_category(name="category 1", description="some description 1")
+
+    assert category.name == "category 1"
+    assert category.description == "some description 1"
+
+  def test_update_category_with_invalid_name_raise_exception(self):
+    category = Category(name="category", description="some description")
+
+    with pytest.raises(ValueError, match="name cannot be longer than 255"):
+      category.update_category(name="a" * 256, description="some description")
+
+
+class TestActivateCategory:
+  def test_activate_inactive_category(self):
+    category = Category(name="category", is_active=False)
+
+    category.activate()
+
+    assert category.is_active is True
+
+  def test_activate_active_category(self):
+    category = Category(name="category", is_active=True)
+
+    category.activate()
+
+    assert category.is_active is True
+
+
+class TestDeactivateCategory:
+  def test_deactivate_active_category(self):
+    category = Category(name="category", is_active=True)
+
+    category.deactivate()
+
+    assert category.is_active is False
+
+  def test_deactivate_inactive_category(self):
+    category = Category(name="category", is_active=False)
+
+    category.deactivate()
+
+    assert category.is_active is False
+
+
+
+class TestEquality:
+  def test_when_categories_have_same_id_they_are_equal(self):
+    category1 = Category(name="category 1", id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"))
+    category2 = Category(name="category 1", id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"))
+
+    assert category1 == category2

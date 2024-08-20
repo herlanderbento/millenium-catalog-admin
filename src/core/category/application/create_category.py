@@ -1,25 +1,34 @@
-
-
+from dataclasses import dataclass
 from uuid import UUID
 
+from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.application.exceptions import InvalidCategory
+
 from src.core.category.domain.category import Category
-from src.core.category.infra.in_memory_category_repository import InMemoryCategoryRepository
+@dataclass
+class CreateCategoryRequest:
+  name: str
+  description: str = ""
+  is_active: bool = True
+    
+@dataclass
+class CreateCategoryResponse:
+  id: UUID
 
-class InvalidCategoryData(Exception):
-  pass
+class CreateCategory:
+  def __init__(self, repository: CategoryRepository):
+    self.repository = repository
+  
+  def execute(self, request: CreateCategoryRequest) -> CreateCategoryResponse:
+    try:
+      category = Category(
+        name=request.name,             
+        description=request.description,
+        is_active=request.is_active,
+      )
+    except ValueError as err:
+      raise InvalidCategory(err)
 
-def create_category(
-  category_repository: InMemoryCategoryRepository,
-  name: str, description: str, is_active: bool = True ) -> UUID:
-  try:
-    category = Category(
-      name=name, 
-      description=description, 
-      is_active=is_active
-    )
-  except ValueError as err:
-    raise InvalidCategoryData(str(err))
-  
-  category_repository.save(category)
-  
-  return category.id
+    self.repository.save(category)
+    return CreateCategoryResponse(id=category.id)
+    

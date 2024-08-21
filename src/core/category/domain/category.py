@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 import uuid
 
+
 @dataclass
 class Category:
     name: str
@@ -17,20 +18,19 @@ class Category:
 
     def __repr__(self):
         return f"<Category {self.name} ({self.id})>"
-    
+
     def validate(self):
         if len(self.name) > 255:
             raise ValueError("name cannot be longer than 255")
 
         if not self.name:  # len(self.name) == 0
             raise ValueError("name cannot be empty")
-        
-    
+
     def __eq__(self, other):
         if not isinstance(other, Category):
             return False
         return self.id == other.id
-    
+
     def update_category(self, name, description):
         self.name = name
         self.description = description
@@ -39,11 +39,10 @@ class Category:
 
     def activate(self):
         self.is_active = True
-        
-        self.validate()
 
+        self.validate()
 
     def deactivate(self):
         self.is_active = False
-        
+
         self.validate()

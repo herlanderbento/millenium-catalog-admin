@@ -2,10 +2,13 @@ from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
+from src.core.category.application.use_cases.create_category import (
+    CreateCategory,
+    CreateCategoryRequest,
+    CreateCategoryResponse,
+)
+from src.core.category.application.use_cases.exceptions import InvalidCategory
 from src.core.category.domain.category_repository import CategoryRepository
-
-from src.core.category.application.create_category import CreateCategory, CreateCategoryRequest, CreateCategoryResponse
-from src.core.category.application.exceptions import InvalidCategory
 
 
 class TestCreateCategory:
@@ -13,8 +16,8 @@ class TestCreateCategory:
         mock_repository = MagicMock(CategoryRepository)
         use_case = CreateCategory(repository=mock_repository)
         request = CreateCategoryRequest(
-            name="Filme",
-            description="Categoria para filmes",
+            name="Movie",
+            description="Categories for the movie",
             is_active=True,  # default
         )
 

@@ -28,7 +28,7 @@ class ListCategory:
 
     def execute(self, request: ListCategoryRequest) -> ListCategoryResponse:
         categories = self.repository.list()
-        
+
         return ListCategoryResponse(
             data=[
                 CategoryOutput(

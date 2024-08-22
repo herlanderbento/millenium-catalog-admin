@@ -1,4 +1,3 @@
-from unittest.mock import create_autospec
 import uuid
 from src.core.category.domain.category import Category
 from src.core.category.application.use_cases.list_category import (
@@ -7,38 +6,40 @@ from src.core.category.application.use_cases.list_category import (
     ListCategoryRequest,
     ListCategoryResponse,
 )
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.infra.in_memory_category_repository import (
+    InMemoryCategoryRepository,
+)
 
 
 class TestListCategory:
     def test_when_no_categories_in_repository_then_return_empty_list(self):
-        mock_repository = create_autospec(CategoryRepository)
-        mock_repository.list.return_value = []
-
-        use_case = ListCategory(repository=mock_repository)
+        repository = InMemoryCategoryRepository()
+        use_case = ListCategory(repository=repository)
         request = ListCategoryRequest()
         response = use_case.execute(request)
 
         assert response == ListCategoryResponse(data=[])
 
-    def test_when_categories_in_repository_then_return_list(self):
-        mock_repository = create_autospec(CategoryRepository)
-        mock_repository.list.return_value = [
-            Category(
-                id=uuid.uuidV4(),
-                name="Category 1",
-                description="Description 1",
-                is_active=True,
-            ),
-            Category(
-                id=uuid.uuidV4(),
-                name="Category 2",
-                description="Description 2",
-                is_active=False,
-            ),
-        ]
+    def test_return_existing_categories(self):
+        category_documentary = Category(
+            id=uuid.uuid4(),
+            name="Documentary",
+            description="Category for documentaries",
+            is_active=True,
+        )
 
-        use_case = ListCategory(repository=mock_repository)
+        category_movie = Category(
+            id=uuid.uuid4(),
+            name="Movie",
+            description="Category for movies",
+            is_active=True,
+        )
+
+        repository = InMemoryCategoryRepository()
+        repository.save(category_documentary)
+        repository.save(category_movie)
+
+        use_case = ListCategory(repository=repository)
         request = ListCategoryRequest()
         response = use_case.execute(request)
 

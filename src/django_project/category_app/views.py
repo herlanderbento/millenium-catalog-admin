@@ -2,25 +2,32 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import HTTP_200_OK
+
+from django_project.category_app.repository import DjangoORMCategoryRepository
+
+from src.core.category.application.use_cases.list_category import (
+    ListCategory,
+    ListCategoryRequest,
+)
 
 
 class CategoryViewSet(viewsets.ViewSet):
     def list(self, request: Request) -> Response:
+        use_case = ListCategory(repository=DjangoORMCategoryRepository())
+        response = use_case.execute(request=ListCategoryRequest())
+
+        categories = [
+            {
+                "id": str(category.id),
+                "name": category.name,
+                "description": category.description,
+                "is_active": category.is_active,
+            }
+            for category in response.data
+        ]
+
         return Response(
             status=HTTP_200_OK,
-            data=[
-                {
-                    "id": 1,
-                    "name": "Category 1",
-                    "description": "Category 1 description",
-                    "is_active": True,
-                },
-                {
-                    "id": 2,
-                    "name": "Category 2",
-                    "description": "Category 2 description",
-                    "is_active": False,
-                },
-            ],
+            data=categories,
         )

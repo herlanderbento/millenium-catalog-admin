@@ -22,7 +22,6 @@ class UpdateCategory:
 
     def execute(self, request: UpdateCategoryRequest) -> None:
         category = self.repository.get_by_id(request.id)
-
         if category is None:
             raise CategoryNotFound(f"Category with {request.id} not found")
 
@@ -36,14 +35,13 @@ class UpdateCategory:
             current_name = category.name
             current_description = category.description
 
-            if request.name:
+            if request.name is not None:
                 current_name = request.name
 
-            if request.description:
+            if request.description is not None:
                 current_description = request.description
 
             category.update_category(name=current_name, description=current_description)
-
         except ValueError as error:
             raise InvalidCategory(error)
 

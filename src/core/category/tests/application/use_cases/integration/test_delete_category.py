@@ -1,6 +1,6 @@
 import uuid
 
-import pytest
+import pytest # type: ignore
 from src.core.category.application.use_cases.exceptions import CategoryNotFound
 from src.core.category.application.use_cases.delete_category import (
     DeleteCategory,

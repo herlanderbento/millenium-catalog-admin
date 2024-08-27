@@ -14,13 +14,13 @@ class GenreRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, id: UUID) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
     def list(self) -> list[Genre]:
         raise NotImplementedError
 
     @abstractmethod
     def update(self, genre: Genre) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, id: UUID) -> None:
         raise NotImplementedError

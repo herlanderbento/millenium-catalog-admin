@@ -1,13 +1,13 @@
 import pytest
-from django_project.category_app.models import Category
-from django_project.category_app.models import Category as CategoryModel
-from django_project.category_app.repository import DjangoORMCategoryRepository
+from src.core.category.domain.category import Category
+from src.django_project.category_app.models import Category as CategoryModel
+from src.django_project.category_app.repository import CategoryDjangoRepository
 
 
 @pytest.mark.django_db
 class TestRepository:
     def test_save_category_in_database(self):
-        repository = DjangoORMCategoryRepository()
+        repository = CategoryDjangoRepository()
         category = Category(name="Category 1", description="Some description")
 
         assert CategoryModel.objects.count() == 0
@@ -20,7 +20,7 @@ class TestRepository:
         assert saved_category.is_active
 
     def test_get_category_by_id(self):
-        repository = DjangoORMCategoryRepository()
+        repository = CategoryDjangoRepository()
         category = Category(name="Category 2", description="Some description")
         repository.save(category)
 
@@ -31,7 +31,7 @@ class TestRepository:
         assert retrieved_category.is_active
 
     def test_list_categories(self):
-        repository = DjangoORMCategoryRepository()
+        repository = CategoryDjangoRepository()
         category1 = Category(name="Category 1", description="Some description")
         category2 = Category(name="Category 2", description="Some description")
         repository.save(category1)
@@ -41,7 +41,7 @@ class TestRepository:
         assert len(categories) == 2
 
     def test_update_category(self):
-        repository = DjangoORMCategoryRepository()
+        repository = CategoryDjangoRepository()
         category = Category(name="Category 3", description="Some description")
         repository.save(category)
 
@@ -57,7 +57,7 @@ class TestRepository:
         assert retrieved_category.is_active
 
     def test_delete_category(self):
-        repository = DjangoORMCategoryRepository()
+        repository = CategoryDjangoRepository()
         category = Category(name="Category 4", description="Some description")
         repository.save(category)
 

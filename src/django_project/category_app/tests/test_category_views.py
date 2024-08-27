@@ -5,7 +5,7 @@ from django.urls import reverse
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
-from src.django_project.category_app.repository import DjangoORMCategoryRepository
+from src.django_project.category_app.repository import CategoryDjangoRepository
 from src.core.category.domain.category import Category
 
 
@@ -26,8 +26,8 @@ def category_documentary():
 
 
 @pytest.fixture
-def category_repository() -> DjangoORMCategoryRepository:
-    return DjangoORMCategoryRepository()
+def category_repository() -> CategoryDjangoRepository:
+    return CategoryDjangoRepository()
 
 
 @pytest.mark.django_db
@@ -37,7 +37,7 @@ class TestListAPI:
         self,
         category_movie: Category,
         category_documentary: Category,
-        category_repository: DjangoORMCategoryRepository,
+        category_repository: CategoryDjangoRepository,
     ) -> None:
         category_repository.save(category_movie)
         category_repository.save(category_documentary)
@@ -77,7 +77,7 @@ class TestRetrieveAPI:
     def test_return_category_when_exists(
         self,
         category_movie: Category,
-        category_repository: DjangoORMCategoryRepository,
+        category_repository: CategoryDjangoRepository,
     ) -> None:
         category_repository.save(category_movie)
 
@@ -104,7 +104,7 @@ class TestRetrieveAPI:
 class TestCreateAPI:
     def test_when_request_data_is_valid_then_create_category(
         self,
-        category_repository: DjangoORMCategoryRepository,
+        category_repository: CategoryDjangoRepository,
     ) -> None:
         url = reverse("category-list")
         data = {
@@ -141,7 +141,7 @@ class TestUpdateAPI:
     def test_when_request_data_is_valid_then_update_category(
         self,
         category_movie: Category,
-        category_repository: DjangoORMCategoryRepository,
+        category_repository: CategoryDjangoRepository,
     ) -> None:
         category_repository.save(category_movie)
 
@@ -207,7 +207,7 @@ class TestDeleteAPI:
     def test_when_category_found_then_delete_category(
         self,
         category_movie: Category,
-        category_repository: DjangoORMCategoryRepository,
+        category_repository: CategoryDjangoRepository,
     ) -> None:
         category_repository.save(category_movie)
 

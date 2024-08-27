@@ -14,7 +14,7 @@ from src.core.category.domain.category import Category
 from src.core.genre.domain.genre_repository import GenreRepository
 from src.core.category.domain.category_repository import CategoryRepository
 
-
+# Unit test
 class TestUpdateGenre:
     def test_update_genre_that_does_not_exist_should_raise_genre_not_found(self):
         mock_category_repository = create_autospec(CategoryRepository)

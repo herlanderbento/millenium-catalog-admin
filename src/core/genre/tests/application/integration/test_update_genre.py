@@ -13,7 +13,7 @@ from src.core.category.domain.category import Category
 from src.core.genre.domain.genre import Genre
 from src.core.genre.infra.in_memory_genre_repository import InMemoryGenreRepository
 
-
+# Integration test
 class TestUpdateGenre:
 
     def test_update_non_existent_genre_should_raise_genre_not_found(self):

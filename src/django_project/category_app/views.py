@@ -127,10 +127,10 @@ class CategoryViewSet(viewsets.ViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
     def destroy(self, request: Request, pk: UUID = None):
-        request_data = DeleteCategoryRequestSerializer(data={"id": pk})
-        request_data.is_valid(raise_exception=True)
+        serializer = DeleteCategoryRequestSerializer(data={"id": pk})
+        serializer.is_valid(raise_exception=True)
 
-        input = DeleteCategoryRequest(**request_data.validated_data)
+        input = DeleteCategoryRequest(**serializer.validated_data)
         use_case = DeleteCategory(repository=CategoryDjangoRepository())
         try:
             use_case.execute(input)

@@ -9,13 +9,12 @@ class CategoryDjangoRepository(CategoryRepository):
         self.category_model = category_model
 
     def save(self, category: Category) -> None:
-        model = self.category_model.objects.create(
+        self.category_model.objects.create(
             id=category.id,
             name=category.name,
             description=category.description,
             is_active=category.is_active,
         )
-        model.save()
 
     def get_by_id(self, id: UUID) -> Category | None:
         try:

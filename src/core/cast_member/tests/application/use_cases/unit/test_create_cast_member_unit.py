@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 
 import pytest
 
@@ -13,7 +13,7 @@ from src.core.cast_member.domain.cast_member_repository import CastMemberReposit
 
 class TestCreateCastMemberUseCase:
     def test_create_cast_member(self):
-        cast_member_mock_repository = MagicMock(CastMemberRepository)
+        cast_member_mock_repository = create_autospec(CastMemberRepository)
         use_case = CreateCastMemberUseCase(
             cast_member_repository=cast_member_mock_repository
         )
@@ -29,7 +29,7 @@ class TestCreateCastMemberUseCase:
         cast_member_mock_repository.insert.called is True
 
     def test_create_cast_member_with_invalid_cast_member_type(self):
-        cast_member_mock_repository = MagicMock(CastMemberRepository)
+        cast_member_mock_repository = create_autospec(CastMemberRepository)
         use_case = CreateCastMemberUseCase(
             cast_member_repository=cast_member_mock_repository
         )
@@ -45,7 +45,7 @@ class TestCreateCastMemberUseCase:
         assert exc_info.type is InvalidCastMemberError
 
     def test_create_cast_member_with_empty_name(self):
-        cast_member_mock_repository = MagicMock(CastMemberRepository)
+        cast_member_mock_repository = create_autospec(CastMemberRepository)
         use_case = CreateCastMemberUseCase(
             cast_member_repository=cast_member_mock_repository
         )
@@ -60,7 +60,7 @@ class TestCreateCastMemberUseCase:
         assert exc_info.type is InvalidCastMemberError
 
     def test_create_cast_member_with_name_exceeding_255_characters(self):
-        cast_member_mock_repository = MagicMock(CastMemberRepository)
+        cast_member_mock_repository = create_autospec(CastMemberRepository)
         use_case = CreateCastMemberUseCase(
             cast_member_repository=cast_member_mock_repository
         )
@@ -75,7 +75,7 @@ class TestCreateCastMemberUseCase:
         assert exc_info.type is InvalidCastMemberError
 
     def test_create_cast_member_with_invalid_data(self):
-        cast_member_mock_repository = MagicMock(CastMemberRepository)
+        cast_member_mock_repository = create_autospec(CastMemberRepository)
         use_case = CreateCastMemberUseCase(
             cast_member_repository=cast_member_mock_repository
         )

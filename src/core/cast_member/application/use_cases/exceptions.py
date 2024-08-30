@@ -1,4 +1,4 @@
-class InvalidCastMemberError(Exception):
+class CastMemberInvalidError(Exception):
     pass
 
 

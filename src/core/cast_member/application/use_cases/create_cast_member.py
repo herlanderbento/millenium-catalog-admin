@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from src.core.cast_member.application.use_cases.exceptions import InvalidCastMemberError
+from src.core.cast_member.application.use_cases.exceptions import CastMemberInvalidError
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
 
@@ -27,10 +27,12 @@ class CreateCastMemberUseCase:
         try:
             cast_member = CastMember(name=input.name, type=input.type)
         except ValueError as e:
-            raise InvalidCastMemberError(e)
+            raise CastMemberInvalidError(e)
 
         self.cast_member_repository.insert(cast_member)
 
         return CreateCastMemberOutput(
-            id=cast_member.id, name=cast_member.name, type=cast_member.type
+            id=cast_member.id,
+            name=cast_member.name,
+            type=cast_member.type,
         )

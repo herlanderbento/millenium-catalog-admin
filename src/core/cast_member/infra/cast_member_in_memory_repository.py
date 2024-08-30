@@ -13,7 +13,7 @@ class CastMemberInMemoryRepository(CastMemberRepository):
     def find_by_id(self, id: UUID) -> CastMember | None:
         return next((c for c in self.cast_members if c.id == id), None)
 
-    def findAll(self) -> list[CastMember]:
+    def find_all(self) -> list[CastMember]:
         return self.cast_members[:]
 
     def update(self, entity: CastMember) -> None:

@@ -30,7 +30,7 @@ class TestListCastMembers:
         )
 
         cast_member_mock_repository = create_autospec(CastMemberRepository)
-        cast_member_mock_repository.findAll.return_value = [cast_member1, cast_member2]
+        cast_member_mock_repository.find_all.return_value = [cast_member1, cast_member2]
 
         use_case = ListCastMembersUseCase(
             cast_member_repository=cast_member_mock_repository

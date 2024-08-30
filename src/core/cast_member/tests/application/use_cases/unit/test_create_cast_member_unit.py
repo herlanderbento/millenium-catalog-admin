@@ -2,7 +2,7 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from src.core.cast_member.application.use_cases.exceptions import InvalidCastMemberError
+from src.core.cast_member.application.use_cases.exceptions import CastMemberInvalidError
 from src.core.cast_member.domain.cast_member import CastMemberType
 from src.core.cast_member.application.use_cases.create_cast_member import (
     CreateCastMemberInput,
@@ -37,12 +37,12 @@ class TestCreateCastMemberUseCase:
         input = CreateCastMemberInput(name="John Doe", type="invalid_type")
 
         with pytest.raises(
-            InvalidCastMemberError,
+            CastMemberInvalidError,
             match="type must be a valid CastMemberType: actor or director",
         ) as exc_info:
             use_case.execute(input)
 
-        assert exc_info.type is InvalidCastMemberError
+        assert exc_info.type is CastMemberInvalidError
 
     def test_create_cast_member_with_empty_name(self):
         cast_member_mock_repository = create_autospec(CastMemberRepository)
@@ -53,11 +53,11 @@ class TestCreateCastMemberUseCase:
         input = CreateCastMemberInput(name="", type=CastMemberType.ACTOR)
 
         with pytest.raises(
-            InvalidCastMemberError, match="name cannot be empty"
+            CastMemberInvalidError, match="name cannot be empty"
         ) as exc_info:
             use_case.execute(input)
 
-        assert exc_info.type is InvalidCastMemberError
+        assert exc_info.type is CastMemberInvalidError
 
     def test_create_cast_member_with_name_exceeding_255_characters(self):
         cast_member_mock_repository = create_autospec(CastMemberRepository)
@@ -68,11 +68,11 @@ class TestCreateCastMemberUseCase:
         input = CreateCastMemberInput(name="a" * 256, type=CastMemberType.ACTOR)
 
         with pytest.raises(
-            InvalidCastMemberError, match="name cannot be longer than 255"
+            CastMemberInvalidError, match="name cannot be longer than 255"
         ) as exc_info:
             use_case.execute(input)
 
-        assert exc_info.type is InvalidCastMemberError
+        assert exc_info.type is CastMemberInvalidError
 
     def test_create_cast_member_with_invalid_data(self):
         cast_member_mock_repository = create_autospec(CastMemberRepository)
@@ -82,7 +82,7 @@ class TestCreateCastMemberUseCase:
 
         input = CreateCastMemberInput(name="", type="invalid_type")
 
-        with pytest.raises(InvalidCastMemberError) as exc_info:
+        with pytest.raises(CastMemberInvalidError) as exc_info:
             use_case.execute(input)
 
-        assert exc_info.type is InvalidCastMemberError
+        assert exc_info.type is CastMemberInvalidError

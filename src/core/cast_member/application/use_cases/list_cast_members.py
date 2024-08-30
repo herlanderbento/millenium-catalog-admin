@@ -27,7 +27,7 @@ class ListCastMembersUseCase:
         self.cast_member_repository = cast_member_repository
 
     def execute(self, input: ListCastMembersInput) -> ListCastMembersOutput:
-        cast_members = self.cast_member_repository.findAll()
+        cast_members = self.cast_member_repository.find_all()
 
         return ListCastMembersOutput(
             data=[

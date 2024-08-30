@@ -52,7 +52,7 @@ class TestCastMemberInMemoryRepository:
         cast_member_repository.insert(cast_member1)
         cast_member_repository.insert(cast_member2)
 
-        cast_members = cast_member_repository.findAll()
+        cast_members = cast_member_repository.find_all()
         assert len(cast_members) == 2
         assert cast_members[0] == cast_member1
         assert cast_members[1] == cast_member2

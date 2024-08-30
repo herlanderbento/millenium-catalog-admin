@@ -15,7 +15,7 @@ class CastMemberRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def findAll(self) -> list[CastMember]:
+    def find_all(self) -> list[CastMember]:
         raise NotImplementedError
 
     @abstractmethod

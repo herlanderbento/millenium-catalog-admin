@@ -3,7 +3,7 @@ from uuid import UUID
 
 from src.core.cast_member.application.use_cases.exceptions import (
     CastMemberNotFoundError,
-    InvalidCastMemberError,
+    CastMemberInvalidError,
 )
 from src.core.cast_member.domain.cast_member import CastMemberType
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
@@ -39,7 +39,7 @@ class UpdateCastMemberUseCase:
                 type=input.type,
             )
         except ValueError as e:
-            raise InvalidCastMemberError(e)
+            raise CastMemberInvalidError(e)
 
         self.cast_member_repository.update(cast_member)
 

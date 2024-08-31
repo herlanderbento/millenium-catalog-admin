@@ -11,11 +11,11 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from core.cast_member.application.use_cases.delete_cast_member import (
+from src.core.cast_member.application.use_cases.delete_cast_member import (
     DeleteCastMemberInput,
     DeleteCastMemberUseCase,
 )
-from core.cast_member.application.use_cases.update_cast_member import (
+from src.core.cast_member.application.use_cases.update_cast_member import (
     UpdateCastMemberInput,
     UpdateCastMemberUseCase,
 )

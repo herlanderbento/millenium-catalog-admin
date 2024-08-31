@@ -24,163 +24,183 @@ class TestCreateCastMemberAPI:
         )
         assert response.status_code == status.HTTP_201_CREATED
 
-    # def test_should_be_able_return_400_when_missing_required_fields(self):
-    #     url = "/api/cast-members/"
-
-    #     data = {"type": "ACTOR"}
-    #     response = self.client.post(url, data)
-    #     assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-# @pytest.mark.django_db
-# class TestGetCastMemberAPI(APITestCase):
-
-#     def setUp(self):
-#         self.cast_member = CastMember(
-#             name="John Doe",
-#             type=CastMemberType.ACTOR,
-#         )
-#         cast_member_repository = CastMemberDjangoRepository()
-#         cast_member_repository.insert(self.cast_member)
-
-#     def test_should_be_able_to_get_cast_member(
-#         self,
-#     ) -> None:
-
-#         url = f"/api/cast-members/{self.cast_member.id}/"
-#         response = self.client.get(url)
-
-#         assert response.status_code == status.HTTP_200_OK
-#         assert response.data == {
-#             "data": {
-#                 "id": str(self.cast_member.id),
-#                 "name": "John Doe",
-#                 "type": "ACTOR",
-#             }
-#         }
-
-#     def test_should_be_able_return_404_when_cast_member_does_not_exist(self) -> None:
-
-#         url = f"/api/cast-members/{uuid.uuid4()}/"
-#         response = self.client.get(url)
-
-#         assert response.status_code == status.HTTP_404_NOT_FOUND
-
-#     def test_should_be_able_return_400_when_cast_member_id_is_invalid(self) -> None:
-
-#         url = f"/api/cast-members/invalid_uuid/"
-#         response = self.client.get(url)
-
-#         assert response.status_code == status.HTTP_400_BAD_REQUEST
+    def test_should_be_able_return_400_when_missing_required_fields(
+        self, api_client: APIClient
+    ):
+        response = api_client.post(
+            "/api/cast-members/",
+            {
+                "type": "ACTOR",
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-# @pytest.mark.django_db
-# class TestListCastMembersAPI(APITestCase):
+@pytest.mark.django_db
+class TestGetCastMemberAPI:
+    def test_should_be_able_to_get_cast_member(
+        self,
+        api_client: APIClient,
+    ) -> None:
+        cast_member = CastMember(name="John Doe", type="ACTOR")
+        cast_member_repository = CastMemberDjangoRepository()
+        cast_member_repository.insert(cast_member)
 
-#     def setUp(self):
+        response = api_client.get(f"/api/cast-members/{cast_member.id}/")
 
-#         self.cast_member1 = CastMember(
-#             name="John Doe",
-#             type=CastMemberType.ACTOR,
-#         )
-#         self.cast_member2 = CastMember(
-#             name="Jane Doe",
-#             type=CastMemberType.DIRECTOR,
-#         )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "data": {
+                "id": str(cast_member.id),
+                "name": "John Doe",
+                "type": "ACTOR",
+            }
+        }
 
-#         cast_member_repository = CastMemberDjangoRepository()
-#         cast_member_repository.insert(self.cast_member1)
-#         cast_member_repository.insert(self.cast_member2)
+    def test_should_be_able_return_404_when_cast_member_does_not_exist(
+        self,
+        api_client: APIClient,
+    ) -> None:
 
-#     def test_should_be_able_to_get_cast_members_list(self) -> None:
+        response = api_client.get(f"/api/cast-members/{uuid.uuid4()}/")
 
-#         url = "/api/cast-members/"
-#         response = self.client.get(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
-#         assert response.status_code == status.HTTP_200_OK
-#         assert response.data["data"] == [
-#             {
-#                 "id": str(self.cast_member1.id),
-#                 "name": "John Doe",
-#                 "type": "ACTOR",
-#             },
-#             {
-#                 "id": str(self.cast_member2.id),
-#                 "name": "Jane Doe",
-#                 "type": "DIRECTOR",
-#             },
-#         ]
+    def test_should_be_able_return_400_when_cast_member_id_is_invalid(
+        self, api_client: APIClient
+    ) -> None:
 
+        response = api_client.get(f"/api/cast-members/invalid_uuid/")
 
-# @pytest.mark.django_db
-# class TestUpdateCastMemberAPI(APITestCase):
-
-#     def setUp(self):
-#         self.cast_member = CastMember(
-#             name="John Doe",
-#             type=CastMemberType.ACTOR,
-#         )
-#         cast_member_repository = CastMemberDjangoRepository()
-#         cast_member_repository.insert(self.cast_member)
-
-#     def test_should_be_able_to_update_cast_member(self) -> None:
-#         url = f"/api/cast-members/{self.cast_member.id}/"
-#         data = {"name": "John Doe", "type": "ACTOR"}
-#         response = self.client.put(url, data)
-
-#         assert response.status_code == status.HTTP_200_OK
-#         assert response.data["data"] == {
-#             "id": str(self.cast_member.id),
-#             "name": "John Doe",
-#             "type": "ACTOR",
-#         }
-
-#     def test_should_be_able_return_404_when_cast_member_does_not_exist(self) -> None:
-
-#         url = f"/api/cast-members/{uuid.uuid4()}/"
-#         data = {"name": "John Doe", "type": "ACTOR"}
-
-#         response = self.client.put(url, data)
-
-#         assert response.status_code == status.HTTP_404_NOT_FOUND
-
-#     def test_should_be_able_return_400_when_missing_required_fields(self):
-#         url = f"/api/cast-members/{self.cast_member.id}/"
-
-#         data = {"type": "ACTOR"}
-#         response = self.client.put(url, data)
-#         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-# @pytest.mark.django_db
-# class TestDeleteCastMemberAPI(APITestCase):
+@pytest.mark.django_db
+class TestListCastMembersAPI:
 
-#     def setUp(self):
+    def test_should_be_able_to_get_cast_members_list(
+        self, api_client: APIClient
+    ) -> None:
+        cast_member_actor = CastMember(
+            name="John Doe",
+            type=CastMemberType.ACTOR,
+        )
+        cast_member_director = CastMember(
+            name="Jane Doe",
+            type=CastMemberType.DIRECTOR,
+        )
 
-#         self.cast_member = CastMember(
-#             name="John Doe",
-#             type=CastMemberType.ACTOR,
-#         )
-#         cast_member_repository = CastMemberDjangoRepository()
-#         cast_member_repository.insert(self.cast_member)
+        cast_member_repository = CastMemberDjangoRepository()
+        cast_member_repository.insert(cast_member_actor)
+        cast_member_repository.insert(cast_member_director)
 
-#     def test_should_be_able_to_delete_cast_member(self) -> None:
+        url = "/api/cast-members/"
+        response = api_client.get(url)
 
-#         url = f"/api/cast-members/{self.cast_member.id}/"
-#         response = self.client.delete(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["data"] == [
+            {
+                "id": str(cast_member_actor.id),
+                "name": "John Doe",
+                "type": "ACTOR",
+            },
+            {
+                "id": str(cast_member_director.id),
+                "name": "Jane Doe",
+                "type": "DIRECTOR",
+            },
+        ]
 
-#         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-#     def test_should_be_able_return_404_when_cast_member_does_not_exist(self) -> None:
+@pytest.mark.django_db
+class TestUpdateCastMemberAPI:
 
-#         url = f"/api/cast-members/{uuid.uuid4()}/"
-#         response = self.client.delete(url)
+    def test_should_be_able_to_update_cast_member(self, api_client: APIClient) -> None:
+        cast_member = CastMember(
+            name="John Doe",
+            type=CastMemberType.ACTOR,
+        )
+        cast_member_repository = CastMemberDjangoRepository()
+        cast_member_repository.insert(cast_member)
 
-#         assert response.status_code == status.HTTP_404_NOT_FOUND
+        response = api_client.put(
+            f"/api/cast-members/{cast_member.id}/",
+            {
+                "name": "John Doe",
+                "type": "ACTOR",
+            },
+        )
 
-#     def test_should_be_able_return_400_when_cast_member_id_is_invalid(self) -> None:
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "data": {
+                "id": str(cast_member.id),
+                "name": "John Doe",
+                "type": "ACTOR",
+            }
+        }
 
-#         url = f"/api/cast-members/invalid_uuid/"
-#         response = self.client.delete(url)
+    def test_should_be_able_return_404_when_cast_member_does_not_exist(
+        self, api_client: APIClient
+    ) -> None:
 
-#         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        response = api_client.put(
+            f"/api/cast-members/{uuid.uuid4()}/",
+            {
+                "name": "John Doe",
+                "type": "ACTOR",
+            },
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_should_be_able_return_400_when_missing_required_fields(
+        self, api_client: APIClient
+    ):
+        cast_member = CastMember(
+            name="John Doe",
+            type=CastMemberType.ACTOR,
+        )
+        cast_member_repository = CastMemberDjangoRepository()
+        cast_member_repository.insert(cast_member)
+
+        response = api_client.put(
+            f"/api/cast-members/{cast_member.id}/",
+            {
+                "type": "ACTOR",
+            },
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestDeleteCastMemberAPI:
+
+    def test_should_be_able_to_delete_cast_member(self, api_client: APIClient) -> None:
+        cast_member = CastMember(
+            name="John Doe",
+            type=CastMemberType.ACTOR,
+        )
+        cast_member_repository = CastMemberDjangoRepository()
+        cast_member_repository.insert(cast_member)
+
+        response = api_client.delete(f"/api/cast-members/{cast_member.id}/")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_should_be_able_return_404_when_cast_member_does_not_exist(
+        self, api_client: APIClient
+    ) -> None:
+
+        response = api_client.delete(f"/api/cast-members/{uuid.uuid4()}/")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_should_be_able_return_400_when_cast_member_id_is_invalid(
+        self, api_client: APIClient
+    ) -> None:
+
+        response = api_client.delete(f"/api/cast-members/invalid_uuid/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -2,11 +2,11 @@ import uuid
 from unittest import TestCase
 import pytest
 
-from core.cast_member.infra.cast_member_in_memory_repository import (
+from src.core.cast_member.infra.cast_member_in_memory_repository import (
     CastMemberInMemoryRepository,
 )
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
-from src.core.cast_member.application.use_cases.exceptions import (
+from src.core.cast_member.application.use_cases.common.exceptions import (
     CastMemberNotFoundError,
 )
 from src.core.cast_member.application.use_cases.get_cast_member import (

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from src.core.cast_member.application.use_cases.exceptions import (
+from src.core.cast_member.application.use_cases.common.exceptions import (
     CastMemberNotFoundError,
 )
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository

@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
-from src.core.cast_member.application.use_cases.exceptions import (
+from src.core.cast_member.application.use_cases.common.exceptions import (
     CastMemberNotFoundError,
     CastMemberInvalidError,
 )

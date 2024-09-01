@@ -1,5 +1,5 @@
 import pytest
-from src.core.cast_member.application.use_cases.exceptions import CastMemberInvalidError
+from src.core.cast_member.application.use_cases.common.exceptions import CastMemberInvalidError
 from src.core.cast_member.domain.cast_member import CastMemberType
 from src.core.cast_member.application.use_cases.create_cast_member import (
     CreateCastMemberInput,

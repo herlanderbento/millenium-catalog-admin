@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from core.cast_member.domain.cast_member import CastMember, CastMemberType
-from src.core.cast_member.application.use_cases.exceptions import (
+from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
+from src.core.cast_member.application.use_cases.common.exceptions import (
     CastMemberNotFoundError,
 )
 from src.core.cast_member.application.use_cases.delete_cast_member import (

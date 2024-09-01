@@ -8,7 +8,7 @@ from src.core.cast_member.application.use_cases.delete_cast_member import (
     DeleteCastMemberInput,
     DeleteCastMemberUseCase,
 )
-from src.core.cast_member.application.use_cases.exceptions import CastMemberNotFoundError
+from src.core.cast_member.application.use_cases.common.exceptions import CastMemberNotFoundError
 from src.core.cast_member.infra.cast_member_in_memory_repository import (
     CastMemberInMemoryRepository,
 )

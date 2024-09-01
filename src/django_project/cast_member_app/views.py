@@ -27,7 +27,7 @@ from src.core.cast_member.application.use_cases.list_cast_members import (
     ListCastMembersInput,
     ListCastMembersUseCase,
 )
-from src.core.cast_member.application.use_cases.exceptions import (
+from src.core.cast_member.application.use_cases.common.exceptions import (
     CastMemberInvalidError,
     CastMemberNotFoundError,
 )

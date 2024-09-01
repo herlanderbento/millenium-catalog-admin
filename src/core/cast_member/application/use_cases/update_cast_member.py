@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.core.cast_member.application.use_cases.common.cast_member_output import (
+    CastMemberOutput,
+    CastMemberOutputMapper,
+)
 from src.core.cast_member.application.use_cases.exceptions import (
     CastMemberNotFoundError,
     CastMemberInvalidError,
@@ -17,10 +21,8 @@ class UpdateCastMemberInput:
 
 
 @dataclass
-class UpdateCastMemberOutput:
-    id: UUID
-    name: str
-    type: CastMemberType
+class UpdateCastMemberOutput(CastMemberOutput):
+    pass
 
 
 class UpdateCastMemberUseCase:
@@ -43,8 +45,7 @@ class UpdateCastMemberUseCase:
 
         self.cast_member_repository.update(cast_member)
 
-        return UpdateCastMemberOutput(
-            id=cast_member.id,
-            name=cast_member.name,
-            type=cast_member.type,
+        return CastMemberOutputMapper.to_output(
+            cast_member,
+            output_class=UpdateCastMemberOutput,
         )

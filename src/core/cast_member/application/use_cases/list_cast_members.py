@@ -1,15 +1,12 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.core.cast_member.application.use_cases.common.cast_member_output import (
+    CastMemberOutput,
+    CastMemberOutputMapper,
+)
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
 from src.core.cast_member.domain.cast_member import CastMemberType
-
-
-@dataclass
-class CastMemberOutput:
-    id: UUID
-    name: str
-    type: CastMemberType
 
 
 @dataclass
@@ -31,11 +28,7 @@ class ListCastMembersUseCase:
 
         return ListCastMembersOutput(
             data=[
-                CastMemberOutput(
-                    id=cast_member.id,
-                    name=cast_member.name,
-                    type=cast_member.type,
-                )
+                CastMemberOutputMapper.to_output(cast_member)
                 for cast_member in cast_members
             ]
         )

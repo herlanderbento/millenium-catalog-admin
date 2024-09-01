@@ -25,7 +25,7 @@ class CastMember:
         if not self.name:
             raise ValueError("name cannot be empty")
 
-        if not self.type in CastMemberType:
+        if self.type not in CastMemberType:
             raise ValueError("type must be a valid CastMemberType: actor or director")
 
     def __str__(self):

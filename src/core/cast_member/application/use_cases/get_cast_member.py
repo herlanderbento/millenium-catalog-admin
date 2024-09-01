@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.core.cast_member.application.use_cases.common.cast_member_output import (
+    CastMemberOutput,
+    CastMemberOutputMapper,
+)
+
 from src.core.cast_member.application.use_cases.exceptions import (
     CastMemberNotFoundError,
 )
@@ -14,10 +19,8 @@ class GetCastMemberInput:
 
 
 @dataclass
-class GetCastMemberOutput:
-    id: UUID
-    name: str
-    type: CastMemberType
+class GetCastMemberOutput(CastMemberOutput):
+    pass
 
 
 class GetCastMemberUseCase:
@@ -30,6 +33,7 @@ class GetCastMemberUseCase:
         if cast_member is None:
             raise CastMemberNotFoundError(f"Cast member with ID {input.id} not found")
 
-        return GetCastMemberOutput(
-            id=cast_member.id, name=cast_member.name, type=cast_member.type,
+        return CastMemberOutputMapper.to_output(
+            cast_member,
+            output_class=GetCastMemberOutput,
         )

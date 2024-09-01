@@ -1,7 +1,7 @@
 from uuid import UUID
 from src.core.cast_member.domain.cast_member import CastMember
-from src.django_project.cast_member_app.mappers import CastMemberModelMapper
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
+from src.django_project.cast_member_app.mappers import CastMemberModelMapper
 from src.django_project.cast_member_app.models import CastMemberModel
 
 

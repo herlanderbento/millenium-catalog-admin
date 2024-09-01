@@ -50,4 +50,5 @@ class TestGetCastMember(TestCase):
             id=self.cast_member.id,
             name=self.cast_member.name,
             type=self.cast_member.type,
+            created_at=self.cast_member.created_at
         )

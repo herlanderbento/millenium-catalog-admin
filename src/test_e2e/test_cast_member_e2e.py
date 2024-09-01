@@ -54,6 +54,7 @@ class TestGetCastMemberAPI:
                 "id": str(cast_member.id),
                 "name": "John Doe",
                 "type": "ACTOR",
+                "created_at": cast_member.created_at.isoformat(),
             }
         }
 
@@ -103,11 +104,13 @@ class TestListCastMembersAPI:
                 "id": str(cast_member_actor.id),
                 "name": "John Doe",
                 "type": "ACTOR",
+                "created_at": cast_member_actor.created_at.isoformat(),
             },
             {
                 "id": str(cast_member_director.id),
                 "name": "Jane Doe",
                 "type": "DIRECTOR",
+                "created_at": cast_member_director.created_at.isoformat(),
             },
         ]
 
@@ -137,6 +140,7 @@ class TestUpdateCastMemberAPI:
                 "id": str(cast_member.id),
                 "name": "John Doe",
                 "type": "ACTOR",
+                "created_at": cast_member.created_at.isoformat(),
             }
         }
 

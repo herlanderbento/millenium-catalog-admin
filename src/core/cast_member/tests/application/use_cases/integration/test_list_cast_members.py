@@ -39,10 +39,16 @@ class TestListCastMembers(TestCase):
         assert output == ListCastMembersOutput(
             data=[
                 CastMemberOutput(
-                    id=cast_member1.id, name=cast_member1.name, type=cast_member1.type
+                    id=cast_member1.id,
+                    name=cast_member1.name,
+                    type=cast_member1.type,
+                    created_at=cast_member1.created_at,
                 ),
                 CastMemberOutput(
-                    id=cast_member2.id, name=cast_member2.name, type=cast_member2.type
+                    id=cast_member2.id,
+                    name=cast_member2.name,
+                    type=cast_member2.type,
+                    created_at=cast_member2.created_at,
                 ),
             ]
         )

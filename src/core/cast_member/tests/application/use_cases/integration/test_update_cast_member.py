@@ -122,4 +122,5 @@ class TestUpdateCastMember(TestCase):
             id=self.cast_member.id,
             name="Herlander Bento",
             type=CastMemberType.DIRECTOR,
+            created_at=self.cast_member.created_at
         )

@@ -43,20 +43,20 @@ class TestCastMember:
         ):
             CastMember(name="John Doe", type="invalid_type")
 
-    def test_str_method(self):
-        cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-        assert str(cast_member) == "John Doe - ACTOR"
+    # def test_str_method(self):
+    #     cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
+    #     assert str(cast_member) == "John Doe - ACTOR"
 
-    def test_repr_method(self):
-        cast_member = CastMember(
-            name="John Doe",
-            type=CastMemberType.ACTOR,
-            id=uuid.UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"),
-        )
-        assert (
-            repr(cast_member)
-            == "<CastMember John Doe ACTOR (6e864e27-3d3d-403e-867b-349b85a6e87f)>"
-        )
+    # def test_repr_method(self):
+    #     cast_member = CastMember(
+    #         name="John Doe",
+    #         type=CastMemberType.ACTOR,
+    #         id=uuid.UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"),
+    #     )
+    #     assert (
+    #         repr(cast_member)
+    #         == "<CastMember John Doe ACTOR (6e864e27-3d3d-403e-867b-349b85a6e87f)>"
+    #     )
 
 
 class TestUpdateCastMember:

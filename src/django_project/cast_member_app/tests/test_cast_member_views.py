@@ -48,6 +48,7 @@ class TestGetCastMemberAPI(TestCase):
                 "id": str(self.cast_member.id),
                 "name": "John Doe",
                 "type": "ACTOR",
+                "created_at": self.cast_member.created_at.isoformat(),
             }
         }
 
@@ -95,11 +96,13 @@ class TestListCastMembersAPI(TestCase):
                 "id": str(self.cast_member1.id),
                 "name": "John Doe",
                 "type": "ACTOR",
+                "created_at": self.cast_member1.created_at.isoformat(),
             },
             {
                 "id": str(self.cast_member2.id),
                 "name": "Jane Doe",
                 "type": "DIRECTOR",
+                "created_at": self.cast_member2.created_at.isoformat(),
             },
         ]
 
@@ -125,6 +128,7 @@ class TestUpdateCastMemberAPI(TestCase):
             "id": str(self.cast_member.id),
             "name": "John Doe",
             "type": "ACTOR",
+            "created_at": self.cast_member.created_at.isoformat(),
         }
 
     def test_should_be_able_return_404_when_cast_member_does_not_exist(self) -> None:

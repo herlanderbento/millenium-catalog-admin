@@ -1,7 +1,10 @@
 from dataclasses import asdict, dataclass
+import datetime
 from uuid import UUID
 
-from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
+from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member_type import  CastMemberType
+
 
 
 @dataclass
@@ -9,6 +12,7 @@ class CastMemberOutput:
     id: UUID
     name: str
     type: CastMemberType
+    created_at: datetime.datetime  # Adicionando o campo created_at
 
 
 class CastMemberOutputMapper:

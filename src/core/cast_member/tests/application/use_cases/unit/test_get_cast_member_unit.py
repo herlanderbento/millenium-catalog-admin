@@ -51,4 +51,5 @@ class TestGetCastMember(TestCase):
             id=cast_member.id,
             name="Herlander Bento",
             type=CastMemberType.DIRECTOR,
+            created_at=cast_member.created_at
         )

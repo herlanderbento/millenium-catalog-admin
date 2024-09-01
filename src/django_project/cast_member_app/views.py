@@ -58,6 +58,7 @@ class CastMemberViewSet(viewsets.ViewSet):
         use_case = CreateCastMemberUseCase(
             cast_member_repository=CastMemberDjangoRepository()
         )
+        
         try:
             output = use_case.execute(input=input)
         except CastMemberInvalidError as e:

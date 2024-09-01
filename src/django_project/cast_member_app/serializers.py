@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from src.core.cast_member.domain.cast_member import CastMemberType
+from src.core.cast_member.domain.cast_member_type import CastMemberType
 
 
 class CastMemberTypeField(serializers.ChoiceField):
@@ -18,6 +18,10 @@ class CastMemberOutputSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField(max_length=255)
     type = CastMemberTypeField(required=True)
+    created_at = serializers.SerializerMethodField()
+    
+    def get_created_at(self, obj):
+        return obj.created_at.isoformat()
 
 
 class CreateCastMemberInputSerializer(serializers.Serializer):

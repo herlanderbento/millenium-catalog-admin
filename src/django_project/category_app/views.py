@@ -41,6 +41,7 @@ from src.core.category.application.use_cases.get_category import (
 from src.core.category.application.use_cases.list_category import (
     ListCategory,
     ListCategoryRequest,
+    ListCategoryResponse,
 )
 
 from src.django_project.category_app.repository import CategoryDjangoRepository
@@ -61,14 +62,20 @@ class CategoryViewSet(viewsets.ViewSet):
         )
 
     def list(self, request: Request) -> Response:
-        use_case = ListCategory(repository=CategoryDjangoRepository())
-        output = use_case.execute(request=ListCategoryRequest())
+        order_by = request.query_params.get("order_by", "name")
 
-        response_serializer = ListCategoryResponseSerializer(output)
+        use_case = ListCategory(repository=CategoryDjangoRepository())
+        output: ListCategoryResponse = use_case.execute(
+            request=ListCategoryRequest(
+                order_by=order_by,
+                current_page=int(request.query_params.get("current_page", 1)),
+                per_page=int(request.query_params.get("per_page", 15)),
+            )
+        )
 
         return Response(
             status=HTTP_200_OK,
-            data=response_serializer.data,
+            data=ListCategoryResponseSerializer(output).data,
         )
 
     def retrieve(self, request: Request, pk: None) -> Response:

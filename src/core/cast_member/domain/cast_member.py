@@ -1,8 +1,7 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 import datetime
-from uuid import UUID
-import uuid
 
+from src.core._shared.domain.entity import Entity
 from src.core.cast_member.domain.cast_member_type import CastMemberType
 from src.core.cast_member.domain.cast_member_validator import CastMemberValidator
 
@@ -13,12 +12,13 @@ class CreateCastMemberCommand:
     type: CastMemberType
 
 
-@dataclass
-class CastMember:
+@dataclass(eq=False)
+class CastMember(Entity):
     name: str
     type: CastMemberType
-    id: UUID = field(default_factory=uuid.uuid4)
-    created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
+    created_at: datetime.datetime = field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
+    )
 
     def __post_init__(self):
         if not self.created_at:
@@ -34,7 +34,11 @@ class CastMember:
         )
 
     def validate(self):
-        CastMemberValidator.create(self.name, self.type)
+        notification = CastMemberValidator.create(self.name, self.type)
+
+        if notification.has_errors:
+            self.notification = notification
+            raise ValueError(self.notification.messages)
 
     def update(self, name, type):
         self.name = name

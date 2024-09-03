@@ -1,0 +1,19 @@
+@hostname = localhost
+@port = 8000
+@host = {{hostname}}:{{port}}/api
+@contentType = application/json
+
+### 
+# @name createCategory
+POST  http://{{host}}/categories/
+Content-Type: application/json
+
+{
+    "name": "Category 4",
+    "description": "Description 1"
+}
+
+### 
+# @name listCategory
+GET  http://{{host}}/categories/?per_page=1
+Content-Type: application/json

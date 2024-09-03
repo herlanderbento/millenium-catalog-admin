@@ -21,12 +21,13 @@ class CastMemberDjangoRepository(CastMemberRepository):
         models = self.cast_member_model.objects.all()
         return [CastMemberModelMapper.to_entity(model) for model in models]
 
-    def update(self, entity: CastMember):
+    def update(self, entity: CastMember) -> None:
         model = CastMemberModelMapper.to_model(entity)
-        
+
         self.cast_member_model.objects.filter(id=entity.id).update(
-            name=model.name, type=model.type
+            name=model.name,
+            type=model.type,
         )
 
-    def delete(self, id: UUID):
+    def delete(self, id: UUID) -> None:
         self.cast_member_model.objects.filter(id=id).delete()

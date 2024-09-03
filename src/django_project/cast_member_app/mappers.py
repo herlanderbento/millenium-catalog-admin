@@ -6,7 +6,10 @@ class CastMemberModelMapper:
     @staticmethod
     def to_entity(model: CastMemberModel) -> CastMember:
         return CastMember(
-            id=model.id, name=model.name, type=model.type, created_at=model.created_at
+            id=model.id,
+            name=model.name,
+            type=model.type,
+            created_at=model.created_at,
         )
 
     @staticmethod

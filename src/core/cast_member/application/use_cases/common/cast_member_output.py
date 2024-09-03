@@ -21,4 +21,5 @@ class CastMemberOutputMapper:
         entity: CastMember, output_class=CastMemberOutput
     ) -> CastMemberOutput:
         entity_dict = asdict(entity)
+        entity_dict.pop('notification', None)
         return output_class(**entity_dict)

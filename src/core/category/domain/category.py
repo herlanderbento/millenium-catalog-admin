@@ -1,14 +1,14 @@
-from dataclasses import dataclass, field
-from uuid import UUID
-import uuid
+from dataclasses import dataclass
+
+from src.core.category.domain.category_validator import CategoryValidator
+from src.core._shared.domain.entity import Entity
 
 
-@dataclass
-class Category:
+@dataclass(eq=False)
+class Category(Entity):
     name: str
     description: str = ""
     is_active: bool = True
-    id: UUID = field(default_factory=uuid.uuid4)
 
     def __post_init__(self):
         self.validate()
@@ -20,16 +20,10 @@ class Category:
         return f"<Category {self.name} ({self.id})>"
 
     def validate(self):
-        if len(self.name) > 255:
-            raise ValueError("name cannot be longer than 255")
-
-        if not self.name:  # len(self.name) == 0
-            raise ValueError("name cannot be empty")
-
-    def __eq__(self, other):
-        if not isinstance(other, Category):
-            return False
-        return self.id == other.id
+        notification = CategoryValidator.create(self.name, self.description)
+        if notification.has_errors:
+            self.notification = notification
+            raise ValueError(self.notification.messages)
 
     def update_category(self, name, description):
         self.name = name

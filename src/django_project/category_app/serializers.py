@@ -8,8 +8,15 @@ class CategoryResponseSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
 
 
+class ListOutputMetaSerializer(serializers.Serializer):
+    current_page = serializers.IntegerField()
+    per_page = serializers.IntegerField()
+    total = serializers.IntegerField()
+
+
 class ListCategoryResponseSerializer(serializers.Serializer):
     data = CategoryResponseSerializer(many=True)
+    meta = ListOutputMetaSerializer()
 
 
 class RetrieveCategoryRequestSerializer(serializers.Serializer):
@@ -22,7 +29,9 @@ class RetrieveCategoryResponseSerializer(serializers.Serializer):
 
 class CreateCategoryRequestSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
-    description = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=False)
+    description = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, allow_null=False
+    )
     is_active = serializers.BooleanField(default=True)
 
 
@@ -33,7 +42,9 @@ class CreateCategoryResponseSerializer(serializers.Serializer):
 class UpdateCategoryRequestSerializer(serializers.Serializer):
     id = serializers.UUIDField(required=True)
     name = serializers.CharField(required=True)
-    description = serializers.CharField(required=True, allow_blank=True, allow_null=False)
+    description = serializers.CharField(
+        required=True, allow_blank=True, allow_null=False
+    )
     is_active = serializers.BooleanField(required=True)
 
 

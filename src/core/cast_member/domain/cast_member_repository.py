@@ -7,7 +7,7 @@ from src.core.cast_member.domain.cast_member import CastMember
 class CastMemberRepository(ABC):
 
     @abstractmethod
-    def insert(self, entity: CastMember):
+    def insert(self, entity: CastMember) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -19,7 +19,7 @@ class CastMemberRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, entity: CastMember):
+    def update(self, entity: CastMember) -> None:
         raise NotImplementedError
 
     @abstractmethod

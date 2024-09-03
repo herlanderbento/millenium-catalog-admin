@@ -5,6 +5,7 @@ from src.core.category.application.use_cases.list_category import (
     ListCategory,
     ListCategoryRequest,
     ListCategoryResponse,
+    ListOutputMeta,
 )
 from src.core.category.infra.in_memory_category_repository import (
     InMemoryCategoryRepository,
@@ -18,7 +19,14 @@ class TestListCategory:
         request = ListCategoryRequest()
         response = use_case.execute(request)
 
-        assert response == ListCategoryResponse(data=[])
+        assert response == ListCategoryResponse(
+            data=[],
+            meta=ListOutputMeta(
+                current_page=1,
+                per_page=15,
+                total=0,
+            ),
+        )
 
     def test_return_existing_categories(self):
         category_documentary = Category(
@@ -57,5 +65,10 @@ class TestListCategory:
                     description=category_movie.description,
                     is_active=category_movie.is_active,
                 ),
-            ]
+            ],
+            meta=ListOutputMeta(
+                current_page=1,
+                per_page=15,
+                total=2,
+            ),
         )

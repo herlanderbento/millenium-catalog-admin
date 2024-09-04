@@ -1,7 +1,7 @@
 import logging
 import uuid
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from uuid import UUID
 
 from src.core._shared.domain.notification import Notification
@@ -17,9 +17,14 @@ class Entity(ABC):
     def __eq__(self, other: "Entity") -> bool:
         if not isinstance(other, self.__class__):
             return False
-
         return self.id == other.id
 
     @abstractmethod
     def validate(self):
         pass
+
+    def to_dict(self) -> dict:
+        """
+        Converts the entity's attributes to a dictionary.
+        """
+        return asdict(self)

@@ -1,22 +1,47 @@
 from dataclasses import dataclass
+import datetime
+from typing import Optional
 from uuid import UUID
 
-from src.core.cast_member.application.use_cases.common.cast_member_output import (
-    CastMemberOutput,
-    CastMemberOutputMapper,
+
+from src.core._shared.application.pagination_output import PaginationOutput
+from src.core._shared.application.search_input import SearchInput
+from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member_type import CastMemberType
+
+from src.core.cast_member.domain.cast_member_repository import (
+    CastMemberFilter,
+    CastMemberRepository,
+    CastMemberSearchParams,
+    CastMemberSearchResult,
 )
-from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
-from src.core.cast_member.domain.cast_member import CastMemberType
 
 
-@dataclass
-class ListCastMembersInput:
+@dataclass(slots=True)
+class CastMemberOutput:
+    id: UUID
+    name: str
+    type: CastMemberType
+    created_at: datetime.datetime
+
+    @classmethod
+    def from_entity(cls, entity: CastMember):
+        return cls(
+            id=entity.id,
+            name=entity.name,
+            type=entity.type,
+            created_at=entity.created_at,
+        )
+
+
+@dataclass(slots=True)
+class ListCastMembersInput(SearchInput[CastMemberFilter]):
     pass
 
 
-@dataclass
-class ListCastMembersOutput:
-    data: list[CastMemberOutput]
+@dataclass(slots=True)
+class ListCastMembersOutput(PaginationOutput[CastMemberOutput]):
+    pass
 
 
 class ListCastMembersUseCase:
@@ -24,11 +49,15 @@ class ListCastMembersUseCase:
         self.cast_member_repository = cast_member_repository
 
     def execute(self, input: ListCastMembersInput) -> ListCastMembersOutput:
-        cast_members = self.cast_member_repository.find_all()
+        params = CastMemberSearchParams(**input.to_input())
 
-        return ListCastMembersOutput(
-            data=[
-                CastMemberOutputMapper.to_output(cast_member)
-                for cast_member in cast_members
-            ]
+        result = self.cast_member_repository.search(params)
+
+        return self.__to_output(result)
+
+    def __to_output(self, result: CastMemberSearchResult) -> ListCastMembersOutput:
+        items = list(map(CastMemberOutput.from_entity, result.items))
+        return ListCastMembersOutput.from_search_result(
+            items,
+            result,
         )

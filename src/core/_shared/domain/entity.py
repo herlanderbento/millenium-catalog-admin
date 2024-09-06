@@ -28,3 +28,7 @@ class Entity(ABC):
         Converts the entity's attributes to a dictionary.
         """
         return asdict(self)
+
+@dataclass(slots=True)
+class AggregateRoot(Entity):
+    pass

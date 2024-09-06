@@ -19,7 +19,7 @@ class CastMemberOutputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     type = CastMemberTypeField(required=True)
     created_at = serializers.SerializerMethodField()
-    
+
     def get_created_at(self, obj):
         return obj.created_at.isoformat()
 
@@ -41,8 +41,24 @@ class GetCastMemberOutputSerializer(serializers.Serializer):
     data = CastMemberOutputSerializer(source="*")
 
 
+class ListCastMembersInputSerializer(serializers.Serializer):
+    page = serializers.IntegerField(required=False, allow_null=True)
+    per_page = serializers.IntegerField(required=False, allow_null=True)
+    sort = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    sort_dir = serializers.ChoiceField(
+        choices=["asc", "desc"], required=False, allow_null=True
+    )
+    filter = serializers.JSONField(required=False, allow_null=True)
+
+
+class ListCastMembersMetaSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    current_page = serializers.IntegerField()
+    per_page = serializers.IntegerField()
+
 class ListCastMembersOutputSerializer(serializers.Serializer):
-    data = CastMemberOutputSerializer(many=True)
+    items = CastMemberOutputSerializer(many=True)  # Renomeado para 'data'
+    meta = ListCastMembersMetaSerializer()  
 
 
 class UpdateCastMemberInputSerializer(serializers.Serializer):

@@ -1,3 +1,4 @@
+from typing import Dict
 from uuid import UUID
 from django.shortcuts import render
 from rest_framework import viewsets
@@ -11,6 +12,15 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from src.core.cast_member.application.use_cases.common.cast_member_output import (
+    CastMemberOutput,
+)
+from src.django_project.cast_member_app.presenters import (
+    CastMemberCollectionPresenter,
+    CastMemberPresenter,
+)
+from src.core.cast_member.domain.cast_member_repository import CastMemberFilter
+from src.core._shared.domain.exceptions import NotFoundException
 from src.core.cast_member.application.use_cases.delete_cast_member import (
     DeleteCastMemberInput,
     DeleteCastMemberUseCase,
@@ -42,7 +52,6 @@ from src.django_project.cast_member_app.serializers import (
     DeleteCastMemberInputSerializer,
     GetCastMemberInputSerializer,
     GetCastMemberOutputSerializer,
-    ListCastMembersOutputSerializer,
     UpdateCastMemberInputSerializer,
     UpdateCastMemberOutputSerializer,
 )
@@ -58,7 +67,7 @@ class CastMemberViewSet(viewsets.ViewSet):
         use_case = CreateCastMemberUseCase(
             cast_member_repository=CastMemberDjangoRepository()
         )
-        
+
         try:
             output = use_case.execute(input=input)
         except CastMemberInvalidError as e:
@@ -71,15 +80,27 @@ class CastMemberViewSet(viewsets.ViewSet):
         )
 
     def list(self, request: Request) -> Response:
+        query_params = request.query_params.dict()
+
+        filters = self.extract_filters(query_params)
+        input = ListCastMembersInput(
+            **query_params,
+            filter=(
+                CastMemberFilter(
+                    name=filters.get("name"),
+                    type=filters.get("type"),
+                )
+            )
+        )
+
         use_case = ListCastMembersUseCase(
             cast_member_repository=CastMemberDjangoRepository()
         )
-
-        output = use_case.execute(input=ListCastMembersInput())
+        output = use_case.execute(input)
 
         return Response(
             status=HTTP_200_OK,
-            data=ListCastMembersOutputSerializer(output).data,
+            data=CastMemberCollectionPresenter(output=output).serialize(),
         )
 
     def retrieve(self, request: Request, pk: None) -> Response:
@@ -117,7 +138,7 @@ class CastMemberViewSet(viewsets.ViewSet):
 
         try:
             output = use_case.execute(input=input)
-        except CastMemberNotFoundError as e:
+        except NotFoundException as e:
             return Response(status=HTTP_404_NOT_FOUND, data={"error": str(e)})
         except CastMemberInvalidError as e:
             return Response(status=HTTP_400_BAD_REQUEST, data={"error": str(e)})
@@ -144,3 +165,23 @@ class CastMemberViewSet(viewsets.ViewSet):
             return Response(status=HTTP_404_NOT_FOUND, data={"error": str(e)})
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def serialize(output: CastMemberOutput):
+        return CastMemberPresenter.from_output(output).serialize()
+
+    @staticmethod
+    def extract_filters(query_params: Dict[str, str]) -> Dict[str, str]:
+        filters = {}
+        keys_to_remove = []
+
+        for key, value in query_params.items():
+            if key.startswith("filter[") and key.endswith("]"):
+                filter_key = key[len("filter[") : -1]
+                filters[filter_key] = value
+                keys_to_remove.append(key)
+
+        for key in keys_to_remove:
+            query_params.pop(key)
+
+        return filters

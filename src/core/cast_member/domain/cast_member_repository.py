@@ -1,27 +1,35 @@
-from abc import ABC, abstractmethod
-from uuid import UUID
+from abc import ABC
+from dataclasses import dataclass, field
+from typing import Dict, Optional, Union
 
+from src.core.cast_member.domain.cast_member_type import CastMemberType
+from src.core._shared.domain.repository_interface import ISearchableRepository
+from src.core._shared.domain.search_result import SearchResult
+from src.core._shared.domain.search_params import SearchParams
 from src.core.cast_member.domain.cast_member import CastMember
 
 
-class CastMemberRepository(ABC):
+@dataclass(frozen=True, slots=True)
+class CastMemberFilter:
+    name: str | None = field(default=None)
+    type: CastMemberType | None = field(default=None)
 
-    @abstractmethod
-    def insert(self, entity: CastMember) -> None:
-        raise NotImplementedError
 
-    @abstractmethod
-    def find_by_id(self, id: UUID) -> CastMember | None:
-        raise NotImplementedError
+class CastMemberSearchParams(SearchParams[CastMemberFilter]):
+    pass
 
-    @abstractmethod
-    def find_all(self) -> list[CastMember]:
-        raise NotImplementedError
 
-    @abstractmethod
-    def update(self, entity: CastMember) -> None:
-        raise NotImplementedError
+class CastMemberSearchResult(SearchResult[CastMember]):
+    pass
 
-    @abstractmethod
-    def delete(self, id: UUID) -> None:
-        raise NotImplementedError
+
+class CastMemberRepository(
+    ISearchableRepository[
+        CastMember,
+        CastMemberFilter,
+        CastMemberSearchParams,
+        CastMemberSearchResult,
+    ],
+    ABC,
+):
+    pass

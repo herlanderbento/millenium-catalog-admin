@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.core._shared.domain.exceptions import NotFoundException
 from src.core.cast_member.application.use_cases.common.cast_member_output import (
     CastMemberOutput,
     CastMemberOutputMapper,
 )
 from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberNotFoundError,
     CastMemberInvalidError,
 )
-from src.core.cast_member.domain.cast_member import CastMemberType
+from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
 
 
@@ -33,7 +33,7 @@ class UpdateCastMemberUseCase:
         cast_member = self.cast_member_repository.find_by_id(input.id)
 
         if cast_member is None:
-            raise CastMemberNotFoundError(f"Cast member with ID {input.id} not found")
+            raise NotFoundException(input.id, CastMember)
 
         try:
             cast_member.update(

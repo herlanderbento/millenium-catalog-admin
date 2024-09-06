@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
 import datetime
+from typing import Annotated
+
+from pydantic import Strict
 
 from src.core._shared.domain.entity import Entity
 from src.core.cast_member.domain.cast_member_type import CastMemberType
@@ -16,8 +19,8 @@ class CreateCastMemberCommand:
 class CastMember(Entity):
     name: str
     type: CastMemberType
-    created_at: datetime.datetime = field(
-        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
+    created_at: Annotated[datetime.datetime, Strict()] = field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
     )
 
     def __post_init__(self):

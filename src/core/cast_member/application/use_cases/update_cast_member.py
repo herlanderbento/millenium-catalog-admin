@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from src.core._shared.domain.exceptions import NotFoundException
+from src.core._shared.domain.exceptions import (
+    EntityValidationException,
+    NotFoundException,
+)
 from src.core.cast_member.application.use_cases.common.cast_member_output import (
     CastMemberOutput,
-    CastMemberOutputMapper,
 )
-from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberInvalidError,
-)
+
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
-from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
+from src.core.cast_member.domain.cast_member_repository import ICastMemberRepository
 
 
 @dataclass
@@ -26,26 +26,27 @@ class UpdateCastMemberOutput(CastMemberOutput):
 
 
 class UpdateCastMemberUseCase:
-    def __init__(self, cast_member_repository: CastMemberRepository):
+    def __init__(self, cast_member_repository: ICastMemberRepository):
         self.cast_member_repository = cast_member_repository
 
     def execute(self, input: UpdateCastMemberInput) -> UpdateCastMemberOutput:
-        cast_member = self.cast_member_repository.find_by_id(input.id)
+        entity = self.cast_member_repository.find_by_id(input.id)
 
-        if cast_member is None:
+        if entity is None:
             raise NotFoundException(input.id, CastMember)
 
-        try:
-            cast_member.update(
-                name=input.name,
-                type=input.type,
-            )
-        except ValueError as e:
-            raise CastMemberInvalidError(e)
+        if input.name is not None:
+            entity.change_name(input.name)
 
-        self.cast_member_repository.update(cast_member)
+        if input.type is not None:
+            entity.change_type(input.type)
 
-        return CastMemberOutputMapper.to_output(
-            cast_member,
-            output_class=UpdateCastMemberOutput,
-        )
+        if entity.notification.has_errors():
+            raise EntityValidationException(entity.notification.errors)
+
+        self.cast_member_repository.update(entity)
+
+        return self.__to_ouput(entity)
+
+    def __to_ouput(self, cast_member: CastMember):
+        return UpdateCastMemberOutput.from_entity(cast_member)

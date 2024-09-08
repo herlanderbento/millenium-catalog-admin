@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from src.core.category.domain.category_validator import CategoryValidator
-from src.core._shared.domain.entity import Entity
+from src.core._shared.domain.entity import AggregateRoot
 
 
-@dataclass(eq=False)
-class Category(Entity):
+@dataclass(slots=True, kw_only=True)
+class Category(AggregateRoot):
     name: str
     description: str = ""
     is_active: bool = True

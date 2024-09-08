@@ -1,33 +1,37 @@
-import logging
-import uuid
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, asdict
-from uuid import UUID
+from typing import Any
+from dataclasses import dataclass, field
+from pydantic import TypeAdapter, ValidationError
 
+from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.notification import Notification
 
-logger = logging.getLogger(__name__)
 
-
-@dataclass(kw_only=True)
+@dataclass(slots=True)
 class Entity(ABC):
-    id: UUID = field(default_factory=uuid.uuid4)
-    notification: Notification = field(default_factory=Notification, init=False)
 
-    def __eq__(self, other: "Entity") -> bool:
+    notification: Notification = field(init=False)
+
+    def __post_init__(self):
+        self.notification = Notification()
+
+    @property
+    @abstractmethod
+    def entity_id(self) -> ValueObject:
+        raise NotImplementedError()
+
+    def equals(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
-        return self.id == other.id
+        return self.entity_id == other.entity_id
 
-    @abstractmethod
-    def validate(self):
-        pass
+    def _validate(self, data: Any):
+        try:
+            TypeAdapter(self.__class__).validate_python(data)
+        except ValidationError as e:
+            for error in e.errors():
+                self.notification.add_error(error["msg"], str(error["loc"][0]))
 
-    def to_dict(self) -> dict:
-        """
-        Converts the entity's attributes to a dictionary.
-        """
-        return asdict(self)
 
 @dataclass(slots=True)
 class AggregateRoot(Entity):

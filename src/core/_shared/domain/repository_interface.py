@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import List, Type, Optional, TypeVar, Generic, Dict, Tuple
-from uuid import UUID
+from typing import Any, List, Type, Optional, TypeVar, Generic
 
-from src.core._shared.domain.entity import Entity
+from src.core._shared.domain.value_objects import ValueObject
+from src.core._shared.domain.entity import AggregateRoot
 
-E = TypeVar("E", bound=Entity)
+E = TypeVar("E", bound=AggregateRoot)
+EntityId = TypeVar("EntityId", bound=ValueObject)
 
 
-class IRepository(ABC, Generic[E]):
+class IRepository(ABC, Generic[E, EntityId]):
     @abstractmethod
     def insert(self, entity: E) -> None:
         raise NotImplementedError()
@@ -16,9 +17,8 @@ class IRepository(ABC, Generic[E]):
     def bulk_insert(self, entities: List[E]) -> None:
         raise NotImplementedError()
 
-
     @abstractmethod
-    def find_by_id(self, entity_id: UUID) -> Optional[E]:
+    def find_by_id(self, entity_id: EntityId) -> Optional[E]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -26,21 +26,13 @@ class IRepository(ABC, Generic[E]):
         raise NotImplementedError()
 
     @abstractmethod
-    def find_by_ids(self, ids: List[UUID]) -> List[E]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def exists_by_id(self, ids: List[UUID]) -> Dict[str, List[UUID]]:
-        raise NotImplementedError()
-
-    @abstractmethod
     def update(self, entity: E) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def delete(self, entity_id: UUID) -> None:
+    def delete(self, entity_id: EntityId) -> None:
         raise NotImplementedError()
-    
+
     @abstractmethod
     def get_entity(self) -> Type[E]:
         raise NotImplementedError()
@@ -51,11 +43,20 @@ SearchInput = TypeVar("SearchInput")
 SearchOutput = TypeVar("SearchOutput")
 
 
-class ISearchableRepository(
-    IRepository[E], Generic[E, Filter, SearchInput, SearchOutput]
-):
+# class ISearchableRepository(
+#     IRepository[E, EntityId], Generic[E, EntityId, SearchInput, SearchOutput]
+# ):
+#     sortable_fields: List[str] = []
+
+#     @abstractmethod
+#     def search(self, props: SearchInput) -> SearchOutput:
+#         raise NotImplementedError()
+
+
+class ISearchableRepository(Generic[E, EntityId], IRepository[E, EntityId], ABC):
+
     sortable_fields: List[str] = []
-    
+
     @abstractmethod
-    def search(self, props: SearchInput) -> SearchOutput:
+    def search(self, input_params: Any) -> Any:
         raise NotImplementedError()

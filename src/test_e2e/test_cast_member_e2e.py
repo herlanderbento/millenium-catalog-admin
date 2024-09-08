@@ -46,12 +46,12 @@ class TestGetCastMemberAPI:
         cast_member_repository = CastMemberDjangoRepository()
         cast_member_repository.insert(cast_member)
 
-        response = api_client.get(f"/api/cast-members/{cast_member.id}/")
+        response = api_client.get(f"/api/cast-members/{cast_member.id.value}/")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data == {
             "data": {
-                "id": str(cast_member.id),
+                "id": cast_member.id.value,
                 "name": "John Doe",
                 "type": "ACTOR",
                 "created_at": cast_member.created_at.isoformat(),
@@ -99,20 +99,23 @@ class TestListCastMembersAPI:
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["data"] == [
+        sorted_response_data = sorted(response.data["data"], key=lambda x: x["id"])
+        expected_data = [
             {
-                "id": str(cast_member_actor.id),
+                "id": cast_member_actor.id.value,
                 "name": "John Doe",
-                "type": "ACTOR",
+                "type": cast_member_actor.type.value,
                 "created_at": cast_member_actor.created_at.isoformat(),
             },
             {
-                "id": str(cast_member_director.id),
+                "id": cast_member_director.id.value,
                 "name": "Jane Doe",
-                "type": "DIRECTOR",
+                "type": cast_member_director.type.value,
                 "created_at": cast_member_director.created_at.isoformat(),
             },
         ]
+        sorted_expected_data = sorted(expected_data, key=lambda x: x["id"])
+        assert sorted_response_data == sorted_expected_data
 
 
 @pytest.mark.django_db
@@ -121,7 +124,7 @@ class TestUpdateCastMemberAPI:
     def test_should_be_able_to_update_cast_member(self, api_client: APIClient) -> None:
         cast_member = CastMember(
             name="John Doe",
-            type=CastMemberType.ACTOR,
+            type=CastMemberType.DIRECTOR,
         )
         cast_member_repository = CastMemberDjangoRepository()
         cast_member_repository.insert(cast_member)
@@ -129,7 +132,7 @@ class TestUpdateCastMemberAPI:
         response = api_client.put(
             f"/api/cast-members/{cast_member.id}/",
             {
-                "name": "John Doe",
+                "name": "John Bentley",
                 "type": "ACTOR",
             },
         )
@@ -137,8 +140,8 @@ class TestUpdateCastMemberAPI:
         assert response.status_code == status.HTTP_200_OK
         assert response.data == {
             "data": {
-                "id": str(cast_member.id),
-                "name": "John Doe",
+                "id": cast_member.id.value,
+                "name": "John Bentley",
                 "type": "ACTOR",
                 "created_at": cast_member.created_at.isoformat(),
             }

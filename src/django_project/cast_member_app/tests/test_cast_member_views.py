@@ -45,9 +45,9 @@ class TestGetCastMemberAPI(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert response.data == {
             "data": {
-                "id": str(self.cast_member.id),
+                "id": self.cast_member.id.value,
                 "name": "John Doe",
-                "type": "ACTOR",
+                "type": self.cast_member.type.value,
                 "created_at": self.cast_member.created_at.isoformat(),
             }
         }
@@ -91,20 +91,23 @@ class TestListCastMembersAPI(TestCase):
         response = self.client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["data"] == [
+        sorted_response_data = sorted(response.data["data"], key=lambda x: x["id"])
+        expected_data = [
             {
-                "id": str(self.cast_member1.id),
+                "id": self.cast_member1.id.value,
                 "name": "John Doe",
-                "type": "ACTOR",
+                "type": self.cast_member1.type.value,
                 "created_at": self.cast_member1.created_at.isoformat(),
             },
             {
-                "id": str(self.cast_member2.id),
+                "id": self.cast_member2.id.value,
                 "name": "Jane Doe",
-                "type": "DIRECTOR",
+                "type": self.cast_member2.type.value,
                 "created_at": self.cast_member2.created_at.isoformat(),
             },
         ]
+        sorted_expected_data = sorted(expected_data, key=lambda x: x["id"])
+        assert sorted_response_data == sorted_expected_data
 
 
 @pytest.mark.django_db
@@ -125,9 +128,9 @@ class TestUpdateCastMemberAPI(TestCase):
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["data"] == {
-            "id": str(self.cast_member.id),
+            "id": self.cast_member.id.value,
             "name": "John Doe",
-            "type": "ACTOR",
+            "type":  self.cast_member.type.value,
             "created_at": self.cast_member.created_at.isoformat(),
         }
 

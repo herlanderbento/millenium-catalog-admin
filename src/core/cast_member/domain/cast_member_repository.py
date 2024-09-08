@@ -1,12 +1,11 @@
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Union
 
 from src.core.cast_member.domain.cast_member_type import CastMemberType
 from src.core._shared.domain.repository_interface import ISearchableRepository
 from src.core._shared.domain.search_result import SearchResult
 from src.core._shared.domain.search_params import SearchParams
-from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member import CastMember, CastMemberId
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,13 +22,5 @@ class CastMemberSearchResult(SearchResult[CastMember]):
     pass
 
 
-class CastMemberRepository(
-    ISearchableRepository[
-        CastMember,
-        CastMemberFilter,
-        CastMemberSearchParams,
-        CastMemberSearchResult,
-    ],
-    ABC,
-):
+class ICastMemberRepository(ISearchableRepository[CastMember, CastMemberId], ABC):
     pass

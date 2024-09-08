@@ -1,6 +1,9 @@
+from src.core._shared.domain.exceptions import NotFoundException
+
+
 class CastMemberInvalidError(Exception):
     pass
 
 
-class CastMemberNotFoundError(Exception):
+class CastMemberNotFoundException(NotFoundException):
     pass

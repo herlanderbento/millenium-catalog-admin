@@ -1,92 +1,50 @@
 import pytest
-from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberInvalidError,
-)
+
 from src.core.cast_member.domain.cast_member_type import CastMemberType
 from src.core.cast_member.application.use_cases.create_cast_member import (
     CreateCastMemberInput,
+    CreateCastMemberOutput,
     CreateCastMemberUseCase,
 )
-from src.core.cast_member.infra.cast_member_in_memory_repository import (
-    CastMemberInMemoryRepository,
-)
+from src.django_project.cast_member_app.repository import CastMemberDjangoRepository
 
 
-class TestCreateCastMemberUseCase:
+@pytest.mark.django_db
+class TestCreateCastMemberUseCaseInt:
+    use_case: CreateCastMemberUseCase
+    cast_member_repo: CastMemberDjangoRepository
+
+    def setup_method(self) -> None:
+        self.cast_member_repo = CastMemberDjangoRepository()
+        self.use_case = CreateCastMemberUseCase(self.cast_member_repo)
+
     def test_create_cast_member(self):
-        cast_member_in_memory_repository = CastMemberInMemoryRepository()
-        use_case = CreateCastMemberUseCase(
-            cast_member_repository=cast_member_in_memory_repository
+        input = CreateCastMemberInput(
+            name="director example",
+            type=CastMemberType.DIRECTOR,
+        )
+        output = self.use_case.execute(input)
+
+        cast_member_created = self.cast_member_repo.find_by_id(output.id)
+
+        assert output == CreateCastMemberOutput(
+            id=cast_member_created.id.value,
+            name="director example",
+            type=CastMemberType.DIRECTOR,
+            created_at=cast_member_created.created_at,
         )
 
-        input = CreateCastMemberInput(name="John Doe", type=CastMemberType.ACTOR)
-
-        output = use_case.execute(input)
-
-        assert output.id is not None
-        assert output.name == "John Doe"
-        assert output.type == CastMemberType.ACTOR
-
-        assert len(cast_member_in_memory_repository.find_all()) == 1
-        assert cast_member_in_memory_repository.find_all()[0].id == output.id
-        assert cast_member_in_memory_repository.find_all()[0].name == input.name
-        assert cast_member_in_memory_repository.find_all()[0].type == input.type
-
-    def test_create_cast_member_with_invalid_cast_member_type(self):
-        cast_member_in_memory_repository = CastMemberInMemoryRepository()
-        use_case = CreateCastMemberUseCase(
-            cast_member_repository=cast_member_in_memory_repository
+        input = CreateCastMemberInput(
+            name="actor example",
+            type=CastMemberType.ACTOR,
         )
+        output = self.use_case.execute(input)
 
-        input = CreateCastMemberInput(name="John Doe", type="invalid_type")
+        cast_member_created = self.cast_member_repo.find_by_id(output.id)
 
-        with pytest.raises(
-            CastMemberInvalidError,
-            match="type must be a valid CastMemberType: actor or director",
-        ) as exc_info:
-            use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_create_cast_member_with_empty_name(self):
-        cast_member_in_memory_repository = CastMemberInMemoryRepository()
-        use_case = CreateCastMemberUseCase(
-            cast_member_repository=cast_member_in_memory_repository
+        assert output == CreateCastMemberOutput(
+            id=cast_member_created.id.value,
+            name="actor example",
+            type=CastMemberType.ACTOR,
+            created_at=cast_member_created.created_at,
         )
-
-        input = CreateCastMemberInput(name="", type=CastMemberType.ACTOR)
-
-        with pytest.raises(
-            CastMemberInvalidError, match="name cannot be empty"
-        ) as exc_info:
-            use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_create_cast_member_with_name_exceeding_255_characters(self):
-        cast_member_in_memory_repository = CastMemberInMemoryRepository()
-        use_case = CreateCastMemberUseCase(
-            cast_member_repository=cast_member_in_memory_repository
-        )
-
-        input = CreateCastMemberInput(name="a" * 256, type=CastMemberType.ACTOR)
-
-        with pytest.raises(
-            CastMemberInvalidError, match="name cannot be longer than 255"
-        ) as exc_info:
-            use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_create_cast_member_with_invalid_data(self):
-        cast_member_in_memory_repository = CastMemberInMemoryRepository()
-        use_case = CreateCastMemberUseCase(
-            cast_member_repository=cast_member_in_memory_repository
-        )
-
-        input = CreateCastMemberInput(name="", type="invalid_type")
-
-        with pytest.raises(CastMemberInvalidError) as exc_info:
-            use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError

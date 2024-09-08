@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberNotFoundError,
-)
-from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member_repository import ICastMemberRepository
 
 
 @dataclass
@@ -13,13 +12,13 @@ class DeleteCastMemberInput:
 
 
 class DeleteCastMemberUseCase:
-    def __init__(self, cast_member_repository: CastMemberRepository):
+    def __init__(self, cast_member_repository: ICastMemberRepository):
         self.cast_member_repository = cast_member_repository
 
     def execute(self, input: DeleteCastMemberInput) -> None:
         cast_member = self.cast_member_repository.find_by_id(input.id)
 
         if cast_member is None:
-            raise CastMemberNotFoundError(f"Cast member with ID {input.id} not found")
+            raise NotFoundException(input.id, CastMember)
 
         self.cast_member_repository.delete(input.id)

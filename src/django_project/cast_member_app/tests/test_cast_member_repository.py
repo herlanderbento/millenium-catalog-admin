@@ -1,4 +1,3 @@
-from unittest import TestCase
 import pytest
 
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
@@ -6,8 +5,10 @@ from src.django_project.cast_member_app.repository import CastMemberDjangoReposi
 
 
 @pytest.mark.django_db
-class TestCastMemberRepository(TestCase):
-    def setUp(self):
+class TestCastMemberRepositoryInt:
+    cast_member_repository: CastMemberDjangoRepository
+
+    def setup_method(self):
         self.cast_member_repository = CastMemberDjangoRepository()
 
     def test_should_be_able_insert_new_cast_member(self):
@@ -18,7 +19,9 @@ class TestCastMemberRepository(TestCase):
 
         self.cast_member_repository.insert(cast_member)
 
-        assert self.cast_member_repository.find_by_id(cast_member.id) == cast_member
+        assert (
+            self.cast_member_repository.find_by_id(cast_member.id.value) == cast_member
+        )
 
     def test_should_be_able_find_by_id_a_cast_member(self):
         cast_member = CastMember(
@@ -28,7 +31,7 @@ class TestCastMemberRepository(TestCase):
 
         self.cast_member_repository.insert(cast_member)
 
-        found_cast_member = self.cast_member_repository.find_by_id(cast_member.id)
+        found_cast_member = self.cast_member_repository.find_by_id(cast_member.id.value)
 
         assert found_cast_member == cast_member
 
@@ -63,7 +66,9 @@ class TestCastMemberRepository(TestCase):
         cast_member.type = CastMemberType.DIRECTOR
         self.cast_member_repository.update(cast_member)
 
-        updated_cast_member = self.cast_member_repository.find_by_id(cast_member.id)
+        updated_cast_member = self.cast_member_repository.find_by_id(
+            cast_member.id.value
+        )
 
         assert updated_cast_member.name == "Herlander Bento"
         assert updated_cast_member.type == CastMemberType.DIRECTOR
@@ -73,7 +78,6 @@ class TestCastMemberRepository(TestCase):
 
         self.cast_member_repository.insert(cast_member)
 
-        self.cast_member_repository.delete(cast_member.id)
+        self.cast_member_repository.delete(cast_member.id.value)
 
-        assert self.cast_member_repository.find_by_id(cast_member.id) is None
- 
+        assert self.cast_member_repository.find_by_id(cast_member.id.value) is None

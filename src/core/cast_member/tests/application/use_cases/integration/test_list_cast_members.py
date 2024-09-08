@@ -1,54 +1,46 @@
-from unittest import TestCase
-from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
-from src.core.cast_member.application.use_cases.list_cast_members import (
+import datetime
+from uuid import UUID
+
+import pytest
+from core.cast_member.domain.cast_member_repository import CastMemberFilter
+from src.core.cast_member.application.use_cases.common.cast_member_output import (
     CastMemberOutput,
+)
+from src.core.cast_member.application.use_cases.list_cast_members import (
     ListCastMembersInput,
     ListCastMembersOutput,
     ListCastMembersUseCase,
 )
-from src.core.cast_member.infra.cast_member_in_memory_repository import (
-    CastMemberInMemoryRepository,
-)
+from src.django_project.cast_member_app.repository import CastMemberDjangoRepository
+from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
 
 
-class TestListCastMembers(TestCase):
+@pytest.mark.django_db
+class TestListCastMembersUseCase:
+    use_case: ListCastMembersUseCase
+    cast_member_repo: CastMemberDjangoRepository
 
-    def setUp(self):
-        self.cast_member_in_memory_repository = CastMemberInMemoryRepository()
+    def setup_method(self) -> None:
+        self.cast_member_repo = CastMemberDjangoRepository()
+        self.use_case = ListCastMembersUseCase(self.cast_member_repo)
 
-        self.use_case = ListCastMembersUseCase(
-            cast_member_repository=self.cast_member_in_memory_repository
-        )
-
-    def test_should_be_able_to_return_an_empty_cast_members_list(self):
+    def test_should_be_able_list_cast_members(self):
+        items = [
+            CastMember(name="test 1", type=CastMemberType.DIRECTOR),
+            CastMember(
+                name="test 2",
+                type=CastMemberType.DIRECTOR,
+                created_at=datetime.datetime.now(datetime.timezone.utc)
+                + datetime.timedelta(seconds=200),
+            ),
+        ]
+        self.cast_member_repo.bulk_insert(items)
         input = ListCastMembersInput()
-
         output = self.use_case.execute(input)
-
-        assert output == ListCastMembersOutput(data=[])
-
-    def test_should_be_able_to_return_an_cast_members_list(self):
-        cast_member1 = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-        cast_member2 = CastMember(name="Herlander Bento", type=CastMemberType.ACTOR)
-
-        self.cast_member_in_memory_repository.insert(cast_member1)
-        self.cast_member_in_memory_repository.insert(cast_member2)
-
-        output = self.use_case.execute(ListCastMembersInput())
-
         assert output == ListCastMembersOutput(
-            data=[
-                CastMemberOutput(
-                    id=cast_member1.id,
-                    name=cast_member1.name,
-                    type=cast_member1.type,
-                    created_at=cast_member1.created_at,
-                ),
-                CastMemberOutput(
-                    id=cast_member2.id,
-                    name=cast_member2.name,
-                    type=cast_member2.type,
-                    created_at=cast_member2.created_at,
-                ),
-            ]
+            items=list(map(CastMemberOutput.from_entity, items[::-1])),
+            total=2,
+            current_page=1,
+            per_page=15,
+            last_page=1,
         )

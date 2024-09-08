@@ -1,16 +1,13 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.core._shared.domain.exceptions import NotFoundException
 from src.core.cast_member.application.use_cases.common.cast_member_output import (
     CastMemberOutput,
-    CastMemberOutputMapper,
 )
 
-from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberNotFoundError,
-)
-from src.core.cast_member.domain.cast_member import CastMemberType
-from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
+from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member_repository import ICastMemberRepository
 
 
 @dataclass
@@ -24,16 +21,16 @@ class GetCastMemberOutput(CastMemberOutput):
 
 
 class GetCastMemberUseCase:
-    def __init__(self, cast_member_repository: CastMemberRepository):
+    def __init__(self, cast_member_repository: ICastMemberRepository):
         self.cast_member_repository = cast_member_repository
 
     def execute(self, input: GetCastMemberInput) -> GetCastMemberOutput:
         cast_member = self.cast_member_repository.find_by_id(input.id)
 
         if cast_member is None:
-            raise CastMemberNotFoundError(f"Cast member with ID {input.id} not found")
+            raise NotFoundException(input.id, CastMember)
 
-        return CastMemberOutputMapper.to_output(
-            cast_member,
-            output_class=GetCastMemberOutput,
-        )
+        return self.__to_ouput(cast_member)
+
+    def __to_ouput(self, cast_member: CastMember):
+        return GetCastMemberOutput.from_entity(cast_member)

@@ -1,12 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import Field, dataclass, field
 import datetime
 from typing import Annotated
 
 from pydantic import Strict
 
-from src.core._shared.domain.entity import Entity
+from src.core._shared.domain.value_objects import Uuid
+from src.core._shared.domain.entity import AggregateRoot
 from src.core.cast_member.domain.cast_member_type import CastMemberType
-from src.core.cast_member.domain.cast_member_validator import CastMemberValidator
 
 
 @dataclass
@@ -15,19 +15,18 @@ class CreateCastMemberCommand:
     type: CastMemberType
 
 
-@dataclass(eq=False)
-class CastMember(Entity):
+class CastMemberId(Uuid):
+    pass
+
+
+@dataclass(slots=True, kw_only=True)
+class CastMember(AggregateRoot):
+    id: CastMemberId = field(default_factory=CastMemberId)
     name: str
     type: CastMemberType
     created_at: Annotated[datetime.datetime, Strict()] = field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC)
     )
-
-    def __post_init__(self):
-        if not self.created_at:
-            self.created_at = datetime.datetime.now(datetime.timezone.utc)
-
-        self.validate()
 
     @staticmethod
     def create(props: CreateCastMemberCommand):
@@ -36,15 +35,24 @@ class CastMember(Entity):
             type=props.type,
         )
 
-    def validate(self):
-        notification = CastMemberValidator.create(self.name, self.type)
+    @property
+    def entity_id(self) -> Uuid:
+        return self.id
 
-        if notification.has_errors:
-            self.notification = notification
-            raise ValueError(self.notification.messages)
-
-    def update(self, name, type):
+    def change_name(self, name: str):
         self.name = name
-        self.type = type
-
         self.validate()
+
+    def change_type(self, _type: CastMemberType):
+        self.type = _type
+        self.validate()
+
+    def validate(self):
+        self._validate(
+            {
+                "id": self.id,
+                "name": self.name,
+                "type": self.type,
+                "created_at": self.created_at,
+            }
+        )

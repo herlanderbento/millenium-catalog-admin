@@ -1,12 +1,11 @@
-from typing import Dict, List
-from uuid import UUID
+from typing import List
 from django.core.paginator import Paginator
 
 from src.core._shared.domain.search_params import SortDirection
 from src.core._shared.domain.exceptions import NotFoundException
-from src.core.cast_member.domain.cast_member import CastMember
+from src.core.cast_member.domain.cast_member import CastMember, CastMemberId
 from src.core.cast_member.domain.cast_member_repository import (
-    CastMemberRepository,
+    ICastMemberRepository,
     CastMemberSearchParams,
     CastMemberSearchResult,
 )
@@ -14,13 +13,14 @@ from src.django_project.cast_member_app.mappers import CastMemberModelMapper
 from src.django_project.cast_member_app.models import CastMemberModel
 
 
-class CastMemberDjangoRepository(CastMemberRepository):
+class CastMemberDjangoRepository(ICastMemberRepository):
     sortable_fields: List[str] = ["name", "created_at"]
 
     def __init__(self, cast_member_model: CastMemberModel = CastMemberModel):
         self.cast_member_model = cast_member_model
 
     def insert(self, entity: CastMember) -> None:
+        print(f"Inserting CastMember: {entity}")
         model = CastMemberModelMapper.to_model(entity)
         model.save()
 
@@ -29,15 +29,9 @@ class CastMemberDjangoRepository(CastMemberRepository):
             list(map(CastMemberModelMapper.to_model, entities))
         )
 
-    def find_by_id(self, id: UUID) -> CastMember | None:
-        model = self.cast_member_model.objects.filter(id=id).first()
+    def find_by_id(self, entity_id: CastMemberId) -> CastMember | None:
+        model = self.cast_member_model.objects.filter(id=entity_id).first()
         return CastMemberModelMapper.to_entity(model) if model else None
-
-    def find_by_ids(self, ids: List[UUID]) -> List[CastMember]:
-        raise NotImplementedError()
-
-    def exists_by_id(self, ids: List[UUID]) -> Dict[str, List[UUID]]:
-        raise NotImplementedError()
 
     def find_all(self) -> List[CastMember]:
         models = self.cast_member_model.objects.all()
@@ -46,16 +40,16 @@ class CastMemberDjangoRepository(CastMemberRepository):
     def update(self, entity: CastMember) -> None:
         model = CastMemberModelMapper.to_model(entity)
 
-        affected_rows = self.cast_member_model.objects.filter(id=entity.id).update(
+        affected_rows = self.cast_member_model.objects.filter(id=entity.id.value).update(
             name=model.name,
             type=model.type,
         )
 
         if affected_rows == -1:
-            raise NotFoundException(entity.id, self.get_entity())
+            raise NotFoundException(entity.id.value, self.get_entity())
 
-    def delete(self, id: UUID) -> None:
-        self.cast_member_model.objects.filter(id=id).delete()
+    def delete(self, entity_id: CastMemberId) -> None:
+        self.cast_member_model.objects.filter(id=entity_id).delete()
 
     def search(self, props: CastMemberSearchParams) -> CastMemberSearchResult:
         query = self.cast_member_model.objects.all()
@@ -71,7 +65,6 @@ class CastMemberDjangoRepository(CastMemberRepository):
             if props.sort_dir == SortDirection.DESC:
                 props.sort = f"-{props.sort}"
             query = query.order_by(props.sort)
-
         else:
             query = query.order_by("-created_at")
 

@@ -130,6 +130,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    'EXCEPTION_HANDLER': 'src.django_project.shared_app.exception_handler.custom_exception_handler'
 }
 
 APPEND_SLASH = False

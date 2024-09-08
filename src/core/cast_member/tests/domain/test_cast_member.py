@@ -1,79 +1,107 @@
-import uuid
-import pytest
-from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
+import datetime
+from typing import Annotated
+
+from pydantic import Strict
+from src.core._shared.domain.entity import AggregateRoot
+from src.core.cast_member.domain.cast_member import (
+    CastMember,
+    CastMemberId,
+    CastMemberType,
+)
 
 
 class TestCastMember:
-    def test_name_is_required(self):
-        with pytest.raises(
-            TypeError,
-            match="missing 2 required positional arguments: 'name' and 'type'",
-        ):
-            CastMember()
+    def test_should_be_a_aggregate_root_subclass(self):
+        assert issubclass(CastMember, AggregateRoot)
 
-    def test_cannot_change_to_empty_name(self):
-        with pytest.raises(ValueError, match="name cannot be empty"):
-            CastMember(id=uuid.uuid4(), name="", type="actor")
+    def test_should_be_slots(self):
+        assert CastMember.__slots__ == ("id", "name", "type", "created_at")
 
-    def test_name_must_have_less_than_255_characters(self):
-        with pytest.raises(ValueError, match="name cannot be longer than 255"):
-            CastMember(id=uuid.uuid4(), name="a" * 256, type="actor")
-
-    def test_cast_member_must_be_created_with_id_as_uuid(self):
-        cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-        assert isinstance(cast_member.id, uuid.UUID)
-
-    def test_created_cast_member_with_default_values(self):
+    def test_should_be_able_generate_a_new_id(self):
         cast_member = CastMember(
             name="John Doe",
-            type=CastMemberType.ACTOR,
-            id=uuid.UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"),
+            type=CastMemberType.DIRECTOR,
         )
-        assert cast_member.id == uuid.UUID("6e864e27-3d3d-403e-867b-349b85a6e87f")
-        assert cast_member.name == "John Doe"
+
+        assert cast_member.id is not None
+        assert isinstance(cast_member.id, CastMemberId)
+
+    def test_should_be_able_generate_a_new_created_at(self):
+        cast_member = CastMember(
+            name="John Doe",
+            type=CastMemberType.DIRECTOR,
+        )
+
+        assert cast_member.created_at is not None
+        assert isinstance(cast_member.created_at, datetime.datetime)
+
+    def test_should_be_equal_to_another_cast_member_with_the_same_id(self):
+        cast_member_id = CastMemberId()
+        cast_member1 = CastMember(
+            id=cast_member_id, name="Test CastMember 1", type=CastMemberType.DIRECTOR
+        )
+        cast_member2 = CastMember(
+            id=cast_member_id, name="Test CastMember 1", type=CastMemberType.ACTOR
+        )
+        assert cast_member1.equals(cast_member2)
+
+    def test_should_not_be_equal_to_another_cast_member_with_a_different_id(self):
+        cast_member1 = CastMember(
+            id=CastMemberId(), name="Test CastMember", type=CastMemberType.DIRECTOR
+        )
+        cast_member2 = CastMember(
+            id=CastMemberId(), name="Test CastMember", type=CastMemberType.DIRECTOR
+        )
+        assert cast_member1 != cast_member2
+
+    def test_should_generate_an_error_in_change_name(self):
+        cast_member = CastMember(
+            id=CastMemberId(),
+            name="Test CastMember",
+            type=CastMemberType.DIRECTOR,
+        )
+        cast_member.change_name(1)  # type: ignore
+        assert cast_member.notification.has_errors() is True
+        assert len(cast_member.notification.errors) == 1
+        assert cast_member.notification.errors == {
+            "name": ["Input should be a valid string"]
+        }
+
+    def test_should_change_name(self):
+        cast_member = CastMember(
+            id=CastMemberId(),
+            name="Test CastMember",
+            type=CastMemberType.DIRECTOR,
+        )
+        new_name = "New Test CastMember"
+        cast_member.change_name(new_name)
+        assert cast_member.name == new_name
+
+    def test_should_generate_an_error_in_change_type(self):
+        cast_member = CastMember(
+            id=CastMemberId(),
+            name="Test CastMember",
+            type=CastMemberType.DIRECTOR,
+        )
+        cast_member.change_type("fake value")
+        assert cast_member.notification.has_errors() is True
+        assert len(cast_member.notification.errors) == 1
+        assert cast_member.notification.errors == {
+            "type": ["Input should be 'ACTOR' or 'DIRECTOR'"]
+        }
+
+    def test_should_change_type(self):
+        cast_member = CastMember(
+            id=CastMemberId(), name="Test CastMember", type=CastMemberType.DIRECTOR
+        )
+        cast_member.change_type(CastMemberType.ACTOR)
         assert cast_member.type == CastMemberType.ACTOR
 
-    def test_cannot_create_cast_member_with_empty_name(self):
-        with pytest.raises(ValueError, match="name cannot be empty"):
-            CastMember(name="", type=CastMemberType.ACTOR)
+    def test_fields_mapping(self):
+        assert CastMember.__annotations__ == {
+            'id': CastMemberId,
+            'name': str,
+            'type': CastMemberType,
+            'created_at': Annotated[datetime.datetime, Strict()]
+        }
 
-    def test_cannot_create_cast_member_with_invalid_type(self):
-        with pytest.raises(
-            ValueError, match="type must be a valid CastMemberType: actor or director"
-        ):
-            CastMember(name="John Doe", type="invalid_type")
-
-    # def test_str_method(self):
-    #     cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-    #     assert str(cast_member) == "John Doe - ACTOR"
-
-    # def test_repr_method(self):
-    #     cast_member = CastMember(
-    #         name="John Doe",
-    #         type=CastMemberType.ACTOR,
-    #         id=uuid.UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"),
-    #     )
-    #     assert (
-    #         repr(cast_member)
-    #         == "<CastMember John Doe ACTOR (6e864e27-3d3d-403e-867b-349b85a6e87f)>"
-    #     )
-
-
-class TestUpdateCastMember:
-    def test_update_cast_member(self):
-        cast_member = CastMember(name="John Doe", type=CastMemberType.DIRECTOR)
-
-        cast_member.update(name="John Krasinski", type=CastMemberType.ACTOR)
-
-        assert cast_member.name == "John Krasinski"
-        assert cast_member.type == CastMemberType.ACTOR
-
-    def test_update_cast_member_invalid_name_raise_exception(self):
-        cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-        with pytest.raises(ValueError, match="name cannot be longer than 255"):
-            cast_member.update(name="a" * 256, type=CastMemberType.ACTOR)
-            
-    def test_cannot_update_cast_member_with_empty_name(self):
-        cast_member = CastMember(name="John Doe", type=CastMemberType.ACTOR)
-        with pytest.raises(ValueError, match="name cannot be empty"):
-            cast_member.update(name="", type=CastMemberType.ACTOR)

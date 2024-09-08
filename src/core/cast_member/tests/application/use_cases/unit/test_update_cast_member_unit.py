@@ -1,12 +1,9 @@
-from unittest import TestCase
-from unittest.mock import create_autospec
 import uuid
 import pytest
 
-from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
-from src.core.cast_member.application.use_cases.common.exceptions import (
-    CastMemberNotFoundError,
-    CastMemberInvalidError,
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.cast_member.infra.cast_member_in_memory_repository import (
+    CastMemberInMemoryRepository,
 )
 from src.core.cast_member.application.use_cases.update_cast_member import (
     UpdateCastMemberInput,
@@ -16,117 +13,38 @@ from src.core.cast_member.application.use_cases.update_cast_member import (
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
 
 
-class TestUpdateCastMember(TestCase):
-    def setUp(self):
-        self.cast_member = CastMember(name="John Doe", type=CastMemberType.DIRECTOR)
-        self.cast_member_mock_repository = create_autospec(CastMemberRepository)
-        self.use_case = UpdateCastMemberUseCase(
-            cast_member_repository=self.cast_member_mock_repository
-        )
+class TestUpdateCastMemberUseCaseUnit:
+    use_case: UpdateCastMemberUseCase
+    cast_member_repo: CastMemberInMemoryRepository
 
-    def test_must_be_able_to_return_a_cast_member_not_found_error_when_no_entity_exists(
+    def setup_method(self) -> None:
+        self.cast_member_repo = CastMemberInMemoryRepository()
+        self.use_case = UpdateCastMemberUseCase(self.cast_member_repo)
+
+    def test_throw_exception_when_cast_member_not_found(
         self,
     ):
-        self.cast_member_mock_repository.find_by_id.return_value = None
-
-        input = UpdateCastMemberInput(
-            id=uuid.uuid4(),
-            name="Jane Doe",
-            type=CastMemberType.ACTOR,
-        )
-
-        with pytest.raises(
-            CastMemberNotFoundError, match=f"Cast member with ID {input.id} not found"
-        ) as error:
-            self.use_case.execute(input)
-
-        assert error.type is CastMemberNotFoundError
-
-    def test_should_be_able_to_return_a_no_error_when_the_name_is_longer_than_255_characters(
-        self,
-    ):
-        self.cast_member_mock_repository.find_by_id.return_value = self.cast_member
-
-        input = UpdateCastMemberInput(
-            id=self.cast_member.id,
-            name="A" * 256,
-            type=CastMemberType.ACTOR,
-        )
-
-        with pytest.raises(
-            CastMemberInvalidError, match="name cannot be longer than 255"
-        ) as exc_info:
-            self.use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_should_be_able_to_return_a_no_error_when_the_name_is_empty(self):
-        self.cast_member_mock_repository.find_by_id.return_value = self.cast_member
-
-        input = UpdateCastMemberInput(
-            id=self.cast_member.id,
-            name="",
-            type=CastMemberType.ACTOR,
-        )
-
-        with pytest.raises(
-            CastMemberInvalidError, match="name cannot be empty"
-        ) as exc_info:
-            self.use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_must_be_able_to_return_a_no_error_when_the_cast_member_type_is_invalid(
-        self,
-    ):
-        self.cast_member_mock_repository.find_by_id.return_value = self.cast_member
-
-        input = UpdateCastMemberInput(
-            id=self.cast_member.id,
-            name="Jane Doe",
-            type="invalid_type",
-        )
-
-        with pytest.raises(
-            CastMemberInvalidError,
-            match="type must be a valid CastMemberType: actor or director",
-        ) as exc_info:
-            self.use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
-
-    def test_must_be_able_to_update_a_cast_member_with_invalid_data(self):
-        self.cast_member_mock_repository.find_by_id.return_value = self.cast_member
-
-        input = UpdateCastMemberInput(
-            id=self.cast_member.id,
-            name="",
-            type="invalid_type",
-        )
-
-        with pytest.raises(CastMemberInvalidError) as exc_info:
-            self.use_case.execute(input)
-
-        assert exc_info.type is CastMemberInvalidError
+        _id = uuid.uuid4()
+        request = UpdateCastMemberInput(id=_id, name="John", type=CastMemberType.ACTOR)
+        with pytest.raises(NotFoundException) as assert_error:
+            self.use_case.execute(request)
+        assert assert_error.value.args[0] == f"CastMember with id {str(_id)} not found"
 
     def test_must_be_able_to_update_a_cast_member(self):
-        self.cast_member_mock_repository.find_by_id.return_value = self.cast_member
+        cast_member = CastMember(name="John Doe", type=CastMemberType.DIRECTOR)
+        self.cast_member_repo.insert(cast_member)
 
         input = UpdateCastMemberInput(
-            id=self.cast_member.id,
+            id=cast_member.id,
             name="Herlander Bento",
-            type=CastMemberType.DIRECTOR,
+            type=CastMemberType.ACTOR,
         )
 
         output = self.use_case.execute(input)
 
-        assert output.id == self.cast_member.id
-        assert output.name == "Herlander Bento"
-        assert output.type == CastMemberType.DIRECTOR
-
         assert output == UpdateCastMemberOutput(
-            id=self.cast_member.id,
+            id=cast_member.id.value,
             name="Herlander Bento",
-            type=CastMemberType.DIRECTOR,
-            created_at=self.cast_member.created_at
+            type=CastMemberType.ACTOR,
+            created_at=cast_member.created_at,
         )

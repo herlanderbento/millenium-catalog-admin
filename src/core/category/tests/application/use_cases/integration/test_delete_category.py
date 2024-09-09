@@ -4,10 +4,10 @@ import pytest # type: ignore
 from src.core.category.application.use_cases.exceptions import CategoryNotFound
 from src.core.category.application.use_cases.delete_category import (
     DeleteCategory,
-    DeleteCategoryRequest,
+    DeleteCategoryInput,
 )
 from src.core.category.domain.category import Category
-from src.core.category.infra.in_memory_category_repository import InMemoryCategoryRepository
+from core.category.infra.category_in_memory_repository import InMemoryICategoryRepository
 
 
 class TestDeleteCategory:
@@ -18,9 +18,9 @@ class TestDeleteCategory:
             description="Category for the movie",
             is_active=True,
         )
-        repository = InMemoryCategoryRepository(categories=[category])
+        repository = InMemoryICategoryRepository(categories=[category])
         use_case = DeleteCategory(repository=repository)
-        request = DeleteCategoryRequest(
+        request = DeleteCategoryInput(
             id=category.id,
         )
 
@@ -32,9 +32,9 @@ class TestDeleteCategory:
         assert len(repository.categories) == 0
         
     def test_when_category_does_not_exist_then_raise_exception(self):
-          repository = InMemoryCategoryRepository()
+          repository = InMemoryICategoryRepository()
           use_case = DeleteCategory(repository=repository)
-          request = DeleteCategoryRequest(
+          request = DeleteCategoryInput(
               id=uuid.uuid4(),
           )
 

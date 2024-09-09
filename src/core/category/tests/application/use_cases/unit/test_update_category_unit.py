@@ -4,9 +4,9 @@ import uuid
 from src.core.category.application.use_cases.exceptions import CategoryNotFound
 from src.core.category.application.use_cases.update_category import (
     UpdateCategory,
-    UpdateCategoryRequest,
+    UpdateCategoryInput,
 )
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import ICategoryRepository
 from src.core.category.domain.category import Category
 
 
@@ -19,11 +19,11 @@ class TestUpdateCategory(unittest.TestCase):
             is_active=True,
         )
 
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = category
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             name="movies",
         )
@@ -41,11 +41,11 @@ class TestUpdateCategory(unittest.TestCase):
             is_active=True,
         )
 
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = category
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             description="new description",
         )
@@ -63,11 +63,11 @@ class TestUpdateCategory(unittest.TestCase):
             is_active=False,
         )
 
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = category
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             is_active=True,
         )
@@ -85,11 +85,11 @@ class TestUpdateCategory(unittest.TestCase):
             is_active=True,
         )
 
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = category
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             is_active=False,
         )
@@ -107,11 +107,11 @@ class TestUpdateCategory(unittest.TestCase):
             is_active=True,
         )
 
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = category
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             name="movies",
             description="new description",
@@ -126,11 +126,11 @@ class TestUpdateCategory(unittest.TestCase):
         mock_repository.update.assert_called_once_with(category)
 
     def test_when_category_does_not_exist_then_raise_exception(self):
-        mock_repository = create_autospec(CategoryRepository)
+        mock_repository = create_autospec(ICategoryRepository)
         mock_repository.get_by_id.return_value = None
 
         use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=uuid.uuid4(),
         )
 

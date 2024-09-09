@@ -1,23 +1,24 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from src.core.category.application.use_cases.exceptions import CategoryNotFound
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.category.domain.category import Category
+from src.core.category.domain.category_repository import ICategoryRepository
 
 
 @dataclass
-class DeleteCategoryRequest:
+class DeleteCategoryInput:
     id: UUID
 
 
-class DeleteCategory:
-    def __init__(self, repository: CategoryRepository):
-        self.repository = repository
+class DeleteCategoryUseCase:
+    def __init__(self, category_repository: ICategoryRepository):
+        self.category_repository = category_repository
 
-    def execute(self, request: DeleteCategoryRequest):
-        category = self.repository.get_by_id(request.id)
+    def execute(self, input: DeleteCategoryInput):
+        category = self.category_repository.find_by_id(input.id)
 
         if category is None:
-            raise CategoryNotFound(f"Category with {request.id} not found")
+            raise NotFoundException(input.id, Category)
 
-        self.repository.delete(request.id)
+        self.category_repository.delete(input.id)

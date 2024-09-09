@@ -1,25 +1,17 @@
-from abc import ABC, abstractmethod
-from uuid import UUID
-from src.core.category.domain.category import Category
+from abc import ABC
+from src.core._shared.domain.repository_interface import ISearchableRepository
+from src.core._shared.domain.search_params import SearchParams
+from src.core._shared.domain.search_result import SearchResult
+from src.core.category.domain.category import Category, CategoryId
 
 
-class CategoryRepository(ABC):
-    @abstractmethod
-    def save(self, category: Category):
-        raise NotImplementedError
+class CategorySearchParams(SearchParams[str]):
+    pass
 
-    @abstractmethod
-    def get_by_id(self, id: UUID) -> Category | None:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def list(self) -> list[Category]:
-        raise NotImplementedError
 
-    @abstractmethod
-    def update(self, category: Category) -> None:
-        raise NotImplementedError
+class CategorySearchResult(SearchResult[Category]):
+    pass
 
-    @abstractmethod
-    def delete(self, id: UUID) -> None:
-        raise NotImplementedError
+
+class ICategoryRepository(ISearchableRepository[Category, CategoryId], ABC):
+    pass

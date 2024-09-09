@@ -1,3 +1,4 @@
+annotated-types==0.7.0
 asgiref==3.8.1
 asttokens==2.4.1
 decorator==5.1.1
@@ -16,6 +17,8 @@ pluggy==1.5.0
 prompt_toolkit==3.0.47
 ptyprocess==0.7.0
 pure_eval==0.2.3
+pydantic==2.9.1
+pydantic_core==2.23.3
 Pygments==2.18.0
 pytest==8.3.2
 pytest-django==4.8.0
@@ -24,4 +27,5 @@ six==1.16.0
 sqlparse==0.5.1
 stack-data==0.6.3
 traitlets==5.14.3
+typing_extensions==4.12.2
 wcwidth==0.2.13

@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
 
@@ -24,7 +24,12 @@ from src.django_project.cast_member_app.views import CastMemberViewSet
 from src.django_project.genre_app.views import GenreViewSet
 from src.django_project.category_app.views import CategoryViewSet
 
-router = DefaultRouter()
+class CustomRouter(DefaultRouter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.trailing_slash = '/?' 
+
+router = CustomRouter()
 router.register(r"api/categories", CategoryViewSet, basename="category")
 router.register(r"api/genres", GenreViewSet, basename="genre")
 router.register(r"api/cast-members", CastMemberViewSet, basename="cast_member")
@@ -33,4 +38,5 @@ router.register(r"api/cast-members", CastMemberViewSet, basename="cast_member")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", include(router.urls)),
 ] + router.urls

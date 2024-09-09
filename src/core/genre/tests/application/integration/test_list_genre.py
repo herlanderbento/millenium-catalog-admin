@@ -1,8 +1,8 @@
 from src.core.genre.application.use_cases.list_genre import GenreOutput, ListGenre
 from src.core.genre.domain.genre import Genre
 from src.core.category.domain.category import Category
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 from src.core.genre.infra.in_memory_genre_repository import InMemoryGenreRepository
 
@@ -10,7 +10,7 @@ from src.core.genre.infra.in_memory_genre_repository import InMemoryGenreReposit
 class TestListGenre:
     def test_list_genre_with_associated_categories(self):
         genre_repository = InMemoryGenreRepository()
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
 
         category_1 = Category(name="Category 1")
         category_2 = Category(name="Category 2")

@@ -1,38 +1,81 @@
-from uuid import UUID
+from typing import List
+from django.core.paginator import Paginator
+
+from src.core._shared.domain.search_params import SortDirection
+from src.core._shared.domain.exceptions import NotFoundException
 from src.django_project.category_app.mappers import CategoryModelMapper
-from src.core.category.domain.category import Category
-from src.core.category.domain.category_repository import CategoryRepository
-from src.django_project.category_app.models import Category as CategoryModel
+from src.core.category.domain.category import Category, CategoryId
+from src.core.category.domain.category_repository import (
+    CategorySearchParams,
+    CategorySearchResult,
+    ICategoryRepository,
+)
+from src.django_project.category_app.models import CategoryModel
 
 
-class CategoryDjangoRepository(CategoryRepository):
-    def __init__(self, category_model: CategoryModel = CategoryModel):
-        self.category_model = category_model
+class CategoryDjangoRepository(ICategoryRepository):
+    sortable_fields: List[str] = ["name", "created_at"]
 
-    def save(self, category: Category) -> None:
+    def insert(self, category: Category) -> None:
         model = CategoryModelMapper.to_model(category)
         model.save()
 
-    def get_by_id(self, id: UUID) -> Category | None:
-        try:
-            model = self.category_model.objects.get(id=id)
-            return CategoryModelMapper.to_entity(model)
-
-        except self.category_model.DoesNotExist:
-            return None
-
-    def list(self) -> list[Category]:
-        models = self.category_model.objects.all()
-        return [CategoryModelMapper.to_entity(model) for model in models]
-
-    def update(self, category: Category) -> None:
-        model = CategoryModelMapper.to_model(category)
-
-        self.category_model.objects.filter(id=category.id).update(
-            name=model.name,
-            description=model.description,
-            is_active=model.is_active,
+    def bulk_insert(self, entities: List[Category]) -> None:
+        CategoryModel.objects.bulk_create(
+            list(map(CategoryModelMapper.to_model, entities))
         )
 
-    def delete(self, id: UUID) -> None:
-        self.category_model.objects.filter(id=id).delete()
+    def find_by_id(self, entity_id: CategoryId) -> Category | None:
+        model = CategoryModel.objects.filter(id=entity_id).first()
+        return CategoryModelMapper.to_entity(model) if model else None
+
+    def find_all(self) -> list[Category]:
+        models = CategoryModel.objects.all()
+        return [CategoryModelMapper.to_entity(model) for model in models]
+
+    def update(self, entity: Category) -> None:
+        model = CategoryModel.objects.filter(id=entity.id.value).update(
+            name=entity.name,
+            description=entity.description,
+            is_active=entity.is_active,
+            created_at=entity.created_at,
+        )
+
+        if not model:
+            raise NotFoundException(entity.id.value, self.get_entity())
+
+    def delete(self, entity_id: CategoryId) -> None:
+        CategoryModel.objects.filter(id=entity_id).delete()
+
+    def search(self, props: CategorySearchParams) -> CategorySearchResult:
+        query = CategoryModel.objects.all()
+
+        if props.filter:
+            query = query.filter(name__icontains=props.filter)
+
+        if props.sort and props.sort in self.sortable_fields:
+            if props.sort_dir == SortDirection.DESC:
+                props.sort = f"-{props.sort}"
+            query = query.order_by(props.sort)
+        else:
+            query = query.order_by("-created_at")
+
+        paginator = Paginator(query, props.per_page)
+
+        if props.page <= paginator.num_pages:
+            page_obj = paginator.page(props.page)
+        else:
+            page_obj = paginator.page(paginator.num_pages)
+            page_obj.object_list = []
+
+        return CategorySearchResult(
+            items=[
+                CategoryModelMapper.to_entity(model) for model in page_obj.object_list
+            ],
+            total=paginator.count,
+            current_page=props.page,
+            per_page=props.per_page,
+        )
+
+    def get_entity(self) -> Category:
+        return Category

@@ -51,13 +51,13 @@ from src.django_project.cast_member_app.serializers import (
 
 class CastMemberViewSet(viewsets.ViewSet):
     def __init__(self, **kwargs):
-        cast_member_repository = CastMemberDjangoRepository()
+        repository = CastMemberDjangoRepository()
 
-        self.create_use_case = CreateCastMemberUseCase(cast_member_repository)
-        self.list_use_case = ListCastMembersUseCase(cast_member_repository)
-        self.get_use_case = GetCastMemberUseCase(cast_member_repository)
-        self.update_use_case = UpdateCastMemberUseCase(cast_member_repository)
-        self.delete_use_case = DeleteCastMemberUseCase(cast_member_repository)
+        self.create_use_case = CreateCastMemberUseCase(repository)
+        self.list_use_case = ListCastMembersUseCase(repository)
+        self.get_use_case = GetCastMemberUseCase(repository)
+        self.update_use_case = UpdateCastMemberUseCase(repository)
+        self.delete_use_case = DeleteCastMemberUseCase(repository)
 
     def create(self, request: Request) -> Response:
         serializer = CreateCastMemberInputSerializer(data=request.data)

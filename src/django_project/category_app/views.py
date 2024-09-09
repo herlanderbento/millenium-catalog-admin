@@ -5,99 +5,93 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
-    HTTP_404_NOT_FOUND,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
 )
 
+
+from src.core.category.application.use_cases.common.category_output import CategoryOutput
 from src.core.category.application.use_cases.delete_category import (
-    DeleteCategory,
-    DeleteCategoryRequest,
+    DeleteCategoryInput,
+    DeleteCategoryUseCase,
 )
 from src.core.category.application.use_cases.update_category import (
-    UpdateCategory,
-    UpdateCategoryRequest,
+    UpdateCategoryInput,
+    UpdateCategoryUseCase,
 )
 from src.core.category.application.use_cases.create_category import (
-    CreateCategory,
-    CreateCategoryRequest,
+    CreateCategoryInput,
+    CreateCategoryUseCase,
 )
 from src.django_project.category_app.serializers import (
-    CreateCategoryRequestSerializer,
-    CreateCategoryResponseSerializer,
-    DeleteCategoryRequestSerializer,
-    ListCategoryResponseSerializer,
-    RetrieveCategoryRequestSerializer,
-    RetrieveCategoryResponseSerializer,
-    UpdateCategoryRequestSerializer,
-)
-from src.core.category.application.use_cases.exceptions import (
-    CategoryNotFound,
+    CreateCategoryInputSerializer,
+    DeleteCategoryInputSerializer,
+    GetCategoryRequestSerializer,
+    UpdateCategoryInputSerializer,
 )
 from src.core.category.application.use_cases.get_category import (
-    GetCategory,
-    GetCategoryRequest,
+    GetCategoryInput,
+    GetCategoryUseCase,
 )
 from src.core.category.application.use_cases.list_category import (
-    ListCategory,
-    ListCategoryRequest,
-    ListCategoryResponse,
+    ListCategoriesInput,
+    ListCategoriesUseCase,
 )
 
 from src.django_project.category_app.repository import CategoryDjangoRepository
+from src.django_project.category_app.presenters import (
+    CategoryCollectionPresenter,
+    CategoryPresenter,
+)
 
 
 class CategoryViewSet(viewsets.ViewSet):
+    def __init__(self, **kwargs):
+        repository = CategoryDjangoRepository()
+
+        self.create_use_case = CreateCategoryUseCase(repository)
+        self.list_use_case = ListCategoriesUseCase(repository)
+        self.get_use_case = GetCategoryUseCase(repository)
+        self.update_use_case = UpdateCategoryUseCase(repository)
+        self.delete_use_case = DeleteCategoryUseCase(repository)
+
     def create(self, request: Request) -> Response:
-        serializer = CreateCategoryRequestSerializer(data=request.data)
+        serializer = CreateCategoryInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        input = CreateCategoryRequest(**serializer.validated_data)
-        use_case = CreateCategory(repository=CategoryDjangoRepository())
-        output = use_case.execute(request=input)
+        input = CreateCategoryInput(**serializer.validated_data)
+        output = self.create_use_case.execute(input)
 
         return Response(
             status=HTTP_201_CREATED,
-            data=CreateCategoryResponseSerializer(output).data,
+            data=CategoryViewSet.serialize(output),
         )
 
     def list(self, request: Request) -> Response:
-        order_by = request.query_params.get("order_by", "name")
+        query_params = request.query_params.dict()
 
-        use_case = ListCategory(repository=CategoryDjangoRepository())
-        output: ListCategoryResponse = use_case.execute(
-            request=ListCategoryRequest(
-                order_by=order_by,
-                current_page=int(request.query_params.get("current_page", 1)),
-                per_page=int(request.query_params.get("per_page", 15)),
-            )
-        )
+        input = ListCategoriesInput(**query_params)
+        output = self.list_use_case.execute(input)
 
         return Response(
             status=HTTP_200_OK,
-            data=ListCategoryResponseSerializer(output).data,
+            data=CategoryCollectionPresenter(output=output).serialize(),
         )
 
     def retrieve(self, request: Request, pk: None) -> Response:
-        serializer = RetrieveCategoryRequestSerializer(data={"id": pk})
+        serializer = GetCategoryRequestSerializer(data={"id": pk})
         serializer.is_valid(raise_exception=True)
 
-        input = GetCategoryRequest(**serializer.validated_data)
-        use_case = GetCategory(repository=CategoryDjangoRepository())
+        input = GetCategoryInput(**serializer.validated_data)
+        output = self.get_use_case.execute(input)
 
-        try:
-            output = use_case.execute(request=input)
-        except CategoryNotFound:
-            return Response(status=HTTP_404_NOT_FOUND)
-
-        response_serializer = RetrieveCategoryResponseSerializer(output)
         return Response(
             status=HTTP_200_OK,
-            data=response_serializer.data,
+            data=CategoryViewSet.serialize(output),
         )
 
     def update(self, request: Request, pk: UUID = None):
-        serializer = UpdateCategoryRequestSerializer(
+        serializer = UpdateCategoryInputSerializer(
             data={
                 **request.data,
                 "id": pk,
@@ -105,17 +99,16 @@ class CategoryViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
 
-        input = UpdateCategoryRequest(**serializer.validated_data)
-        use_case = UpdateCategory(repository=CategoryDjangoRepository())
-        try:
-            use_case.execute(request=input)
-        except CategoryNotFound:
-            return Response(status=HTTP_404_NOT_FOUND)
+        input = UpdateCategoryInput(**serializer.validated_data)
+        output = self.update_use_case.execute(input)
 
-        return Response(status=HTTP_204_NO_CONTENT)
+        return Response(
+            status=HTTP_200_OK,
+            data=CategoryViewSet.serialize(output),
+        )
 
     def partial_update(self, request, pk: UUID = None):
-        serializer = UpdateCategoryRequestSerializer(
+        serializer = UpdateCategoryInputSerializer(
             data={
                 **request.data,
                 "id": pk,
@@ -124,24 +117,23 @@ class CategoryViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
 
-        input = UpdateCategoryRequest(**serializer.validated_data)
-        use_case = UpdateCategory(repository=CategoryDjangoRepository())
-        try:
-            use_case.execute(request=input)
-        except CategoryNotFound:
-            return Response(status=HTTP_404_NOT_FOUND)
+        input = UpdateCategoryInput(**serializer.validated_data)
+        output = self.update_use_case.execute(input)
 
-        return Response(status=HTTP_204_NO_CONTENT)
+        return Response(
+            status=HTTP_200_OK,
+            data=CategoryViewSet.serialize(output),
+        )
 
     def destroy(self, request: Request, pk: UUID = None):
-        serializer = DeleteCategoryRequestSerializer(data={"id": pk})
+        serializer = DeleteCategoryInputSerializer(data={"id": pk})
         serializer.is_valid(raise_exception=True)
 
-        input = DeleteCategoryRequest(**serializer.validated_data)
-        use_case = DeleteCategory(repository=CategoryDjangoRepository())
-        try:
-            use_case.execute(input)
-        except CategoryNotFound:
-            return Response(status=HTTP_404_NOT_FOUND)
+        input = DeleteCategoryInput(**serializer.validated_data)
+        self.delete_use_case.execute(input)
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def serialize(output: CategoryOutput):
+        return CategoryPresenter.from_output(output).serialize()

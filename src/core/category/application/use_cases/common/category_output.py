@@ -1,21 +1,24 @@
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
+import datetime
 from uuid import UUID
 
 from src.core.category.domain.category import Category
 
 
-@dataclass
+@dataclass(slots=True)
 class CategoryOutput:
     id: UUID
     name: str
-    description: str
+    description: str | None
     is_active: bool
+    created_at: datetime.datetime
 
-
-class CategoryOutputMapper:
-
-    @staticmethod
-    def to_output(entity: Category, output_class=CategoryOutput) -> CategoryOutput:
-        entity_dict = asdict(entity)
-        entity_dict.pop("notification", None)
-        return output_class(**entity_dict)
+    @classmethod
+    def from_entity(cls, entity: Category):
+        return cls(
+            id=entity.id.value,
+            name=entity.name,
+            description=entity.description,
+            is_active=entity.is_active,
+            created_at=entity.created_at,
+        )

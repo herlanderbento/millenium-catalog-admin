@@ -20,7 +20,6 @@ class CastMemberDjangoRepository(ICastMemberRepository):
         self.cast_member_model = cast_member_model
 
     def insert(self, entity: CastMember) -> None:
-        print(f"Inserting CastMember: {entity}")
         model = CastMemberModelMapper.to_model(entity)
         model.save()
 

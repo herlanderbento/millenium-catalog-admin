@@ -4,10 +4,10 @@ import pytest
 from src.core.category.application.use_cases.exceptions import CategoryNotFound
 from src.core.category.application.use_cases.update_category import (
     UpdateCategory,
-    UpdateCategoryRequest,
+    UpdateCategoryInput,
 )
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 from src.core.category.domain.category import Category
 
@@ -15,11 +15,11 @@ from src.core.category.domain.category import Category
 class TestUpdateCategory:
     def test_update_category_with_name_and_description(self):
         category = Category(name="category", description="some description")
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         repository.save(category)
 
         use_case = UpdateCategory(repository=repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=category.id,
             name="movies",
             description="new description",
@@ -35,9 +35,9 @@ class TestUpdateCategory:
         assert updated_category.is_active is False
 
     def test_when_category_does_not_exist_then_raise_exception(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         use_case = UpdateCategory(repository=repository)
-        request = UpdateCategoryRequest(
+        request = UpdateCategoryInput(
             id=uuid.uuid4(),
             name="movies",
             description="new description",

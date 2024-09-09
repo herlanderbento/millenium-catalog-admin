@@ -12,12 +12,12 @@ from src.core.genre.application.use_cases.exceptions import (
 from src.core.genre.domain.genre import Genre
 from src.core.category.domain.category import Category
 from src.core.genre.domain.genre_repository import GenreRepository
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import ICategoryRepository
 
 
 class TestUpdateGenre:
     def test_update_genre_that_does_not_exist_should_raise_genre_not_found(self):
-        mock_category_repository = create_autospec(CategoryRepository)
+        mock_category_repository = create_autospec(ICategoryRepository)
         mock_genre_repository = create_autospec(GenreRepository)
 
         non_existent_genre_id = uuid4()
@@ -39,7 +39,7 @@ class TestUpdateGenre:
             use_case.execute(input)
 
     def test_update_genre_with_invalid_attributes_should_raise_invalid_genre(self):
-        mock_category_repository = create_autospec(CategoryRepository)
+        mock_category_repository = create_autospec(ICategoryRepository)
         mock_genre_repository = create_autospec(GenreRepository)
 
         genre = Genre(name="Valid Genre", categories=set())
@@ -65,7 +65,7 @@ class TestUpdateGenre:
     def test_update_genre_with_non_existent_categories_should_raise_related_categories_not_found(
         self,
     ):
-        mock_category_repository = create_autospec(CategoryRepository)
+        mock_category_repository = create_autospec(ICategoryRepository)
         mock_genre_repository = create_autospec(GenreRepository)
 
         movie_category = Category(name="Movie", description="Movie description")
@@ -97,7 +97,7 @@ class TestUpdateGenre:
             use_case.execute(input)
 
     def test_update_genre_with_existing_categories_should_update_correctly(self):
-        mock_category_repository = create_autospec(CategoryRepository)
+        mock_category_repository = create_autospec(ICategoryRepository)
         mock_genre_repository = create_autospec(GenreRepository)
 
         movie_category = Category(name="Movie", description="Movie description")

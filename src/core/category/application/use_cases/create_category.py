@@ -1,37 +1,34 @@
 from dataclasses import dataclass
-from uuid import UUID
 
-from src.core.category.application.use_cases.exceptions import InvalidCategory
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
+)
+from src.core.category.domain.category_repository import ICategoryRepository
 from src.core.category.domain.category import Category
 
 
 @dataclass
-class CreateCategoryRequest:
+class CreateCategoryInput:
     name: str
     description: str = ""
     is_active: bool = True
 
 
 @dataclass
-class CreateCategoryResponse:
-    id: UUID
+class CreateCategoryOutput(CategoryOutput):
+    pass
 
 
-class CreateCategory:
-    def __init__(self, repository: CategoryRepository):
-        self.repository = repository
+class CreateCategoryUseCase:
+    def __init__(self, category_repository: ICategoryRepository):
+        self.category_repository = category_repository
 
-    def execute(self, request: CreateCategoryRequest) -> CreateCategoryResponse:
-        try:
-            category = Category(
-                name=request.name,
-                description=request.description,
-                is_active=request.is_active,
-            )
-        except ValueError as err:
-            raise InvalidCategory(err)
+    def execute(self, input: CreateCategoryInput) -> CreateCategoryOutput:
+        category = Category.create(input)
 
-        self.repository.save(category)
+        self.category_repository.insert(category)
 
-        return CreateCategoryResponse(id=category.id)
+        return self.__to_output(category)
+
+    def __to_output(self, category: Category):
+        return CreateCategoryOutput.from_entity(category)

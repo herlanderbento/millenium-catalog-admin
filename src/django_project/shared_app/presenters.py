@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, List
 from pydantic import TypeAdapter
 
-from src.core._shared.application.dto import PaginationOutput
+from src.core._shared.application.pagination_output import PaginationOutput
 
 
 class ResourcePresenter(ABC):

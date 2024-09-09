@@ -1,72 +1,41 @@
-from abc import ABC
-from dataclasses import dataclass, field
-from typing import Generic, TypeVar
-from uuid import UUID
+from dataclasses import dataclass
 
+from src.core._shared.application.pagination_output import PaginationOutput
+from src.core._shared.application.search_input import SearchInput
 from src.core.category.application.use_cases.common.category_output import (
     CategoryOutput,
-    CategoryOutputMapper,
 )
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import (
+    CategorySearchParams,
+    CategorySearchResult,
+    ICategoryRepository,
+)
 
 
-@dataclass
-class ListCategoryRequest:
-    order_by: str = "name"
-    current_page: int = 1
-    per_page: int = 15
-
-
-@dataclass
-class ListOutputMeta:
-    current_page: int = 1
-    per_page: int = 15
-    total: int = 0
-
-
-T = TypeVar("T")
-
-
-@dataclass
-class ListOutput(Generic[T], ABC):
-    data: list[T] = field(default_factory=list)
-    meta: ListOutputMeta = field(default_factory=ListOutputMeta)
-
-
-@dataclass
-class ListCategoryResponse(ListOutput[CategoryOutput]):
+@dataclass(slots=True)
+class ListCategoriesInput(SearchInput[str]):
     pass
 
 
-class ListCategory:
-    def __init__(self, repository: CategoryRepository):
-        self.repository = repository
+@dataclass(slots=True)
+class ListCategoriesOutput(PaginationOutput[CategoryOutput]):
+    pass
 
-    def execute(self, request: ListCategoryRequest) -> ListCategoryResponse:
-        categories = self.repository.list()
 
-        ordered_categories = sorted(
-            categories,
-            key=lambda category: getattr(category, request.order_by),
-        )
+class ListCategoriesUseCase:
+    def __init__(self, category_repository: ICategoryRepository):
+        self.category_repository = category_repository
 
-        page_offset = (request.current_page - 1) * request.per_page
+    def execute(self, input: ListCategoriesInput) -> ListCategoriesOutput:
+        params = CategorySearchParams(**input.to_input())
 
-        categories_page = ordered_categories[
-            page_offset : page_offset + request.per_page
-        ]
+        result = self.category_repository.search(params)
 
-        return ListCategoryResponse(
-            data=sorted(
-                [
-                    CategoryOutputMapper.to_output(category)
-                    for category in categories_page
-                ],
-                key=lambda category: getattr(category, request.order_by),
-            ),
-            meta=ListOutputMeta(
-                current_page=request.current_page,
-                per_page=request.per_page,
-                total=len(categories),
-            ),
+        return self.__to_output(result)
+
+    def __to_output(self, result: CategorySearchResult) -> ListCategoriesOutput:
+        items = list(map(CategoryOutput.from_entity, result.items))
+        return ListCategoriesOutput.from_search_result(
+            items,
+            result,
         )

@@ -2,24 +2,24 @@ import uuid
 from src.core.category.domain.category import Category
 from src.core.category.application.use_cases.list_category import (
     CategoryOutput,
-    ListCategory,
-    ListCategoryRequest,
-    ListCategoryResponse,
+    ListCategoriesUseCase,
+    ListCategoriesUseCaseRequest,
+    ListCategoriesUseCaseResponse,
     ListOutputMeta,
 )
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 
 
-class TestListCategory:
+class TestListCategoriesUseCase:
     def test_when_no_categories_in_repository_then_return_empty_list(self):
-        repository = InMemoryCategoryRepository()
-        use_case = ListCategory(repository=repository)
-        request = ListCategoryRequest()
+        repository = InMemoryICategoryRepository()
+        use_case = ListCategoriesUseCase(repository=repository)
+        request = ListCategoriesUseCaseRequest()
         response = use_case.execute(request)
 
-        assert response == ListCategoryResponse(
+        assert response == ListCategoriesUseCaseResponse(
             data=[],
             meta=ListOutputMeta(
                 current_page=1,
@@ -43,15 +43,15 @@ class TestListCategory:
             is_active=True,
         )
 
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         repository.save(category_documentary)
         repository.save(category_movie)
 
-        use_case = ListCategory(repository=repository)
-        request = ListCategoryRequest()
+        use_case = ListCategoriesUseCase(repository=repository)
+        request = ListCategoriesUseCaseRequest()
         response = use_case.execute(request)
 
-        assert response == ListCategoryResponse(
+        assert response == ListCategoriesUseCaseResponse(
             data=[
                 CategoryOutput(
                     id=category_documentary.id,

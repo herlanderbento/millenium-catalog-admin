@@ -4,7 +4,7 @@ from uuid import UUID
 
 from src.core.genre.domain.genre import Genre
 from src.core.genre.application.use_cases.exceptions import InvalidGenre, RelatedCategoriesNotFound
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import ICategoryRepository
 from src.core.genre.domain.genre_repository import GenreRepository
 
 
@@ -20,7 +20,7 @@ class CreateGenre:
         id: UUID
 
     def __init__(
-        self, genre_repository: GenreRepository, category_repository: CategoryRepository
+        self, genre_repository: GenreRepository, category_repository: ICategoryRepository
     ):
         self.genre_repository = genre_repository
         self.category_repository = category_repository

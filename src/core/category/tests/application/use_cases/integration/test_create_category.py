@@ -1,15 +1,15 @@
 
 
 from uuid import UUID
-from src.core.category.application.use_cases.create_category import CreateCategory, CreateCategoryRequest
-from src.core.category.infra.in_memory_category_repository import InMemoryCategoryRepository
+from src.core.category.application.use_cases.create_category import CreateCategory, CreateCategoryInput
+from core.category.infra.category_in_memory_repository import InMemoryICategoryRepository
 
 
 class TestCreateCategory:
     def test_create_category_with_valid_data(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         use_case = CreateCategory(repository=repository)
-        request = CreateCategoryRequest(
+        request = CreateCategoryInput(
             name="Movie",
             description="Category for the movie",
             is_active=True,  # default
@@ -28,9 +28,9 @@ class TestCreateCategory:
         assert persisted_category.is_active == True
 
     def test_create_inactive_category_with_valid_data(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         use_case = CreateCategory(repository=repository)
-        request = CreateCategoryRequest(
+        request = CreateCategoryInput(
             name="Movie",
             description="Category for the movie",
             is_active=False,

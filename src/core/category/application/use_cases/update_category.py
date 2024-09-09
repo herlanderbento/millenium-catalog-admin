@@ -1,48 +1,58 @@
-from dataclasses import dataclass
+from dataclasses import MISSING, dataclass
 from uuid import UUID
 
-from src.core.category.application.use_cases.exceptions import (
-    CategoryNotFound,
-    InvalidCategory,
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
 )
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core._shared.domain.exceptions import (
+    EntityValidationException,
+    NotFoundException,
+)
+from src.core.category.domain.category import Category
+from src.core.category.domain.category_repository import ICategoryRepository
 
 
 @dataclass
-class UpdateCategoryRequest:
+class UpdateCategoryInput:
     id: UUID
     name: str | None = None
     description: str | None = None
     is_active: bool | None = None
 
 
-class UpdateCategory:
-    def __init__(self, repository: CategoryRepository):
-        self.repository = repository
+@dataclass
+class UpdateCategoryOutput(CategoryOutput):
+    pass
 
-    def execute(self, request: UpdateCategoryRequest) -> None:
-        category = self.repository.get_by_id(request.id)
+
+class UpdateCategoryUseCase:
+    def __init__(self, category_repository: ICategoryRepository):
+        self.category_repository = category_repository
+
+    def execute(self, input: UpdateCategoryInput) -> UpdateCategoryOutput:
+        category = self.category_repository.find_by_id(input.id)
+
         if category is None:
-            raise CategoryNotFound(f"Category with {request.id} not found")
+            raise NotFoundException(input.id, Category)
 
-        try:
-            if request.is_active is True:
-                category.activate()
+        if input.name is not None:
+            category.change_name(input.name)
 
-            if request.is_active is False:
-                category.deactivate()
+        if input.description is not None:
+            category.change_description(input.description)
 
-            current_name = category.name
-            current_description = category.description
+        if input.is_active is True:
+            category.activate()
 
-            if request.name is not None:
-                current_name = request.name
+        if input.is_active is False:
+            category.deactivate()
 
-            if request.description is not None:
-                current_description = request.description
+        if category.notification.has_errors():
+            raise EntityValidationException(category.notification.errors)
 
-            category.update_category(name=current_name, description=current_description)
-        except ValueError as error:
-            raise InvalidCategory(error)
+        self.category_repository.update(category)
 
-        self.repository.update(category)
+        return self.__to_ouput(category)
+
+    def __to_ouput(self, category: Category):
+        return UpdateCategoryOutput.from_entity(category)

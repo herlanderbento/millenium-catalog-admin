@@ -133,4 +133,4 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'src.django_project.shared_app.exception_handler.custom_exception_handler'
 }
 
-APPEND_SLASH = False
+APPEND_SLASH = True

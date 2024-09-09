@@ -3,9 +3,9 @@ import pytest
 
 from src.core.genre.application.use_cases.exceptions import RelatedCategoriesNotFound
 from src.core.genre.application.use_cases.create_genre import CreateGenre
-from src.core.category.domain.category_repository import CategoryRepository
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from src.core.category.domain.category_repository import ICategoryRepository
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 from src.core.genre.infra.in_memory_genre_repository import InMemoryGenreRepository
 from src.core.category.domain.category import Category
@@ -13,7 +13,7 @@ from src.core.category.domain.category import Category
 
 class TestCreateGenre:
     def test_create_genre_with_associated_categories(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         category_repository.save(
@@ -43,7 +43,7 @@ class TestCreateGenre:
         assert created_genre.is_active
 
     def test_create_genre_with_inexistent_categories_raise_an_error(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         use_case = CreateGenre(
@@ -61,7 +61,7 @@ class TestCreateGenre:
         assert len(genre_repository.list()) == 0
         
     def test_create_genre_without_categories(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         use_case = CreateGenre(

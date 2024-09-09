@@ -5,8 +5,8 @@ from src.core.genre.application.use_cases.exceptions import (
     InvalidGenre,
     RelatedCategoriesNotFound,
 )
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 from src.core.genre.application.use_cases.update_genre import UpdateGenre
 from src.core.category.domain.category import Category
@@ -17,7 +17,7 @@ from src.core.genre.infra.in_memory_genre_repository import InMemoryGenreReposit
 class TestUpdateGenre:
 
     def test_update_non_existent_genre_should_raise_genre_not_found(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         use_case = UpdateGenre(
@@ -36,7 +36,7 @@ class TestUpdateGenre:
             use_case.execute(input)
 
     def test_update_genre_with_invalid_attributes_should_raise_invalid_genre(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         genre = Genre(name="Valid Genre", categories=set())
@@ -62,7 +62,7 @@ class TestUpdateGenre:
     def test_update_genre_with_non_existent_categories_should_raise_related_categories_not_found(
         self,
     ):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         genre = Genre(name="Genre with Categories", categories=set())
@@ -88,7 +88,7 @@ class TestUpdateGenre:
             use_case.execute(input)
 
     def test_update_genre_with_existing_categories_should_update_genre_correctly(self):
-        category_repository = InMemoryCategoryRepository()
+        category_repository = InMemoryICategoryRepository()
         genre_repository = InMemoryGenreRepository()
 
         movie_category = Category(name="Movie", description="Movie description")

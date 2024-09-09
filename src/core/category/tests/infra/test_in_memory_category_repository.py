@@ -1,13 +1,13 @@
 import uuid
 from src.core.category.domain.category import Category
-from src.core.category.infra.in_memory_category_repository import (
-    InMemoryCategoryRepository,
+from core.category.infra.category_in_memory_repository import (
+    InMemoryICategoryRepository,
 )
 
 
-class TestInMemoryCategoryRepository:
+class TestInMemoryICategoryRepository:
     def test_save_category(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         category = Category(name="category", description="some description")
 
         repository.save(category)
@@ -16,7 +16,7 @@ class TestInMemoryCategoryRepository:
         assert repository.categories[0] == category
 
     def test_get_by_id(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         category = Category(
             id=uuid.uuid4(), name="category", description="some description"
         )
@@ -27,7 +27,7 @@ class TestInMemoryCategoryRepository:
         assert retrieved_category == category
 
     def test_delete_category(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         category = Category(
             id=uuid.uuid4(), name="category", description="some description"
         )
@@ -38,7 +38,7 @@ class TestInMemoryCategoryRepository:
         assert repository.get_by_id(category.id) is None
 
     def test_update_category(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         category = Category(
             id=uuid.uuid4(), name="category", description="some description"
         )
@@ -54,7 +54,7 @@ class TestInMemoryCategoryRepository:
         assert retrieved_category == updated_category
 
     def test_list_category(self):
-        repository = InMemoryCategoryRepository()
+        repository = InMemoryICategoryRepository()
         category_documentary = Category(
             id=uuid.uuid4(), name="category documentary", description="description documentary"
         )

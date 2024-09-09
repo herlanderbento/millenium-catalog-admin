@@ -8,7 +8,7 @@ from src.core.genre.domain.genre import Genre
 from src.core.genre.application.use_cases.create_genre import CreateGenre
 from src.core.category.domain.category import Category
 from src.core.genre.domain.genre_repository import GenreRepository
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import ICategoryRepository
 
 
 @pytest.fixture
@@ -29,15 +29,15 @@ def documentary_category() -> Category:
 @pytest.fixture
 def mock_category_repository_with_categories(
     movie_category, documentary_category
-) -> CategoryRepository:
-    repository = create_autospec(CategoryRepository)
+) -> ICategoryRepository:
+    repository = create_autospec(ICategoryRepository)
     repository.list.return_value = [movie_category, documentary_category]
     return repository
 
 
 @pytest.fixture
-def mock_empty_category_repository() -> CategoryRepository:
-    repository = create_autospec(CategoryRepository)
+def mock_empty_category_repository() -> ICategoryRepository:
+    repository = create_autospec(ICategoryRepository)
     repository.list.return_value = []
     return repository
 

@@ -1,6 +1,6 @@
 from unittest.mock import create_autospec
 from src.core.genre.domain.genre import Genre
-from src.core.category.domain.category_repository import CategoryRepository
+from src.core.category.domain.category_repository import ICategoryRepository
 from src.core.category.domain.category import Category
 from src.core.genre.application.use_cases.list_genre import ListGenre
 from src.core.genre.domain.genre_repository import GenreRepository

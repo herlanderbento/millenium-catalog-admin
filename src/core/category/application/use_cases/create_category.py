@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from src.core._shared.application.use_cases import UseCase
 from src.core.category.application.use_cases.common.category_output import (
     CategoryOutput,
 )
@@ -19,7 +20,7 @@ class CreateCategoryOutput(CategoryOutput):
     pass
 
 
-class CreateCategoryUseCase:
+class CreateCategoryUseCase(UseCase):
     def __init__(self, category_repository: ICategoryRepository):
         self.category_repository = category_repository
 

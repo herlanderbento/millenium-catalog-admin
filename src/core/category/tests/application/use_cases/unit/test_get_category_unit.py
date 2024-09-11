@@ -1,52 +1,62 @@
-import unittest
-from unittest.mock import create_autospec
+import pytest
 import uuid
 
-from src.core.category.application.use_cases.exceptions import CategoryNotFound
+from pydantic import StrictBool, ValidationError
+from src.core._shared.application.use_cases import UseCase
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.category.infra.category_in_memory_repository import (
+    CategoryInMemoryRepository,
+)
 from src.core.category.domain.category import Category
 from src.core.category.application.use_cases.get_category import (
-    GetCategory,
     GetCategoryInput,
     GetCategoryOutput,
+    GetCategoryUseCase,
 )
-
 from src.core.category.domain.category_repository import ICategoryRepository
 
 
-class TestGetCategory(unittest.TestCase):
-    def test_get_category(self):
+class TestGetCategoryUseCastUnit:
+    category_repo: CategoryInMemoryRepository
+    use_case: GetCategoryUseCase
+
+    def setup_method(self) -> None:
+        self.category_repo = CategoryInMemoryRepository()
+        self.use_case = GetCategoryUseCase(self.category_repo)
+
+    def test_if_instance_a_use_case(self):
+        assert issubclass(GetCategoryUseCase, UseCase)
+
+    def test_input(self):
+        assert GetCategoryInput.__annotations__, {
+            "id": uuid.UUID,
+        }
+
+    def test_must_be_able_to_return_an_error_when_the_entity_does_not_exist(self):
+        input = GetCategoryInput(uuid.uuid4())
+
+        with pytest.raises(NotFoundException) as assert_error:
+            self.use_case.execute(input)
+
+        assert assert_error.value.args[0] == f"Category with id {input.id} not found"
+
+    def test_should_be_able_get_category(self):
         category = Category(
-            id=uuid.uuid4(),
             name="Movie",
             description="Category for the movie",
             is_active=True,
         )
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
+        self.category_repo.insert(category)
 
-        use_case = GetCategory(repository=mock_repository)
-        request = GetCategoryInput(id=uuid.uuid4())
+        input = GetCategoryInput(id=category.id.value)
 
-        response = use_case.execute(request)
+        output = self.use_case.execute(input)
 
-        assert response == GetCategoryOutput(
-            id=category.id,
+        assert output == GetCategoryOutput(
+            id=category.id.value,
             name="Movie",
             description="Category for the movie",
             is_active=True,
+            created_at=category.created_at,
         )
-        
-    def test_when_category_does_not_exist_then_raise_exception(self):
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = None
 
-        use_case = GetCategory(repository=mock_repository)
-        request = GetCategoryInput(id=uuid.uuid4())
-
-        with self.assertRaises(CategoryNotFound) as exc_info:
-            use_case.execute(request)
-
-        assert str(exc_info.exception) == f"Category with {request.id} not found"
-
-if __name__ == "__main__":
-    unittest.main()

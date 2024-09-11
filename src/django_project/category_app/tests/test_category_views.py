@@ -1,69 +1,114 @@
 import uuid
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from django.urls import reverse
+from django.test import TestCase
 import pytest
 from rest_framework import status
-from rest_framework.test import APIClient
 from src.django_project.category_app.repository import CategoryDjangoRepository
 from src.core.category.domain.category import Category
 
 
-@pytest.fixture
-def category_movie():
-    return Category(
-        name="Movie",
-        description="Movie description",
-    )
+@pytest.mark.django_db
+class TestCreateCategoryAPI(TestCase):
+    def test_create_category(self):
+        url = "/api/categories"
 
+        data = {
+            "name": "Movie",
+            "description": "some description",
+            "is_active": True,
+        }
 
-@pytest.fixture
-def category_documentary():
-    return Category(
-        name="Documentary",
-        description="Documentary description",
-    )
+        response = self.client.post(url, data)
+        assert response.status_code == status.HTTP_201_CREATED
 
+    def test_should_be_able_return_400_when_missing_required_fields(self):
+        url = "/api/categories/"
 
-@pytest.fixture
-def category_repository() -> CategoryDjangoRepository:
-    return CategoryDjangoRepository()
+        data = {
+            "name": "",
+            "description": "",
+            "is_active": True,
+        }
+        response = self.client.post(url, data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-class TestListAPI:
+class TestGetCategoryAPI(TestCase):
+    def setUp(self):
+        self.category = Category(
+            name="Movie",
+            description="Movie description",
+            is_active=True,
+        )
+        category_repo = CategoryDjangoRepository()
+        category_repo.insert(self.category)
+
+    def test_should_be_able_return_404_when_category_does_not_exist(self):
+        url = f"/api/categories/{uuid.uuid4()}/"
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_should_be_able_return_400_when_category_id_is_invalid(self) -> None:
+
+        url = f"/api/categories/invalid_uuid/"
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_should_be_able_to_get_category(
+        self,
+    ) -> None:
+
+        url = f"/api/categories/{self.category.id}/"
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "data": {
+                "id": self.category.id.value,
+                "name": "Movie",
+                "description": "Movie description",
+                "is_active": True,
+                "created_at": self.category.created_at.isoformat(),
+            }
+        }
+
+
+@pytest.mark.django_db
+class TestLisCategoriestAPI(TestCase):
+    def setUp(self):
+        category_repo = CategoryDjangoRepository()
+        self.category = Category(
+            name="Movie",
+            description="Movie description",
+            is_active=True,
+        )
+        category_repo.insert(self.category)
 
     def test_list_categories(
         self,
-        category_movie: Category,
-        category_documentary: Category,
-        category_repository: CategoryDjangoRepository,
     ) -> None:
-        category_repository.save(category_movie)
-        category_repository.save(category_documentary)
-
         url = "/api/categories/"
-        response = APIClient().get(url)
+        response = self.client.get(url)
 
         expected_data = {
             "data": [
                 {
-                    "id": str(category_documentary.id),
-                    "name": "Documentary",
-                    "description": "Documentary description",
-                    "is_active": True,
-                },
-                {
-                    "id": str(category_movie.id),
+                    "id": self.category.id.value,
                     "name": "Movie",
                     "description": "Movie description",
                     "is_active": True,
+                    "created_at": self.category.created_at.isoformat(),
                 },
             ],
             "meta": {
+                "total": 1,
                 "current_page": 1,
                 "per_page": 15,
-                "total": 2,
+                "last_page": 1,
             },
         }
 
@@ -72,106 +117,55 @@ class TestListAPI:
 
 
 @pytest.mark.django_db
-class TestRetrieveAPI:
-    def test_when_id_is_invalid_return_400(self) -> None:
-        url = "/api/categories/12345677/"
-        response = APIClient().get(url)
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_return_category_when_exists(
-        self,
-        category_movie: Category,
-        category_repository: CategoryDjangoRepository,
-    ) -> None:
-        category_repository.save(category_movie)
-
-        url = f"/api/categories/{category_movie.id}/"
-        response = APIClient().get(url)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data == {
-            "data": {
-                "id": str(category_movie.id),
-                "name": "Movie",
-                "description": "Movie description",
-                "is_active": True,
-            }
-        }
-
-    def test_return_404_when_category_does_not_exist(self) -> None:
-        url = f"/api/categories/{uuid.uuid4()}/"
-        response = APIClient().get(url)
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-@pytest.mark.django_db
-class TestCreateAPI:
-    def test_when_request_data_is_valid_then_create_category(
-        self,
-        category_repository: CategoryDjangoRepository,
-    ) -> None:
-        url = reverse("category-list")
-        data = {
-            "name": "Movie",
-            "description": "Movie description",
-        }
-        response = APIClient().post(url, data=data)
-
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["id"]
-
-        saved_category = category_repository.get_by_id(response.data["id"])
-        assert saved_category == Category(
-            id=UUID(response.data["id"]),
+class TestUpdateCategoryAPI(TestCase):
+    def setUp(self):
+        self.category_repo = CategoryDjangoRepository()
+        self.category = Category(
             name="Movie",
             description="Movie description",
             is_active=True,
         )
+        self.category_repo.insert(self.category)
 
-    def test_when_request_data_is_invalid_then_return_400(self) -> None:
-        url = reverse("category-list")
-        data = {
-            "name": "",
-            "description": "Movie description",
-        }
-        response = APIClient().post(url, data=data)
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data == {"name": ["This field may not be blank."]}
-
-
-@pytest.mark.django_db
-class TestUpdateAPI:
     def test_when_request_data_is_valid_then_update_category(
         self,
-        category_movie: Category,
-        category_repository: CategoryDjangoRepository,
     ) -> None:
-        category_repository.save(category_movie)
-
-        url = reverse("category-detail", kwargs={"pk": category_movie.id})
+        url = f"/api/categories/{self.category.id}/"
         data = {
             "name": "Not Movie",
             "description": "Another description",
             "is_active": False,
         }
-        response = APIClient().put(url, data=data)
+        response = self.client.put(
+            url,
+            data,
+            content_type="application/json",
+        )
+        found_category = self.category_repo.find_by_id(self.category.id.value)
 
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not response.data
-        updated_category = category_repository.get_by_id(category_movie.id)
-        assert updated_category.name == "Not Movie"
-        assert updated_category.description == "Another description"
-        assert updated_category.is_active is False
+        assert response.status_code == status.HTTP_200_OK
+
+        assert response.data == {
+            "data": {
+                "id": found_category.id.value,
+                "name": "Not Movie",
+                "description": "Another description",
+                "is_active": False,
+                "created_at": found_category.created_at.isoformat(),
+            }
+        }
 
     def test_when_request_data_is_invalid_then_return_400(self) -> None:
-        url = reverse("category-detail", kwargs={"pk": "invalid-uuid"})
+        url = f"/api/categories/invalid-uuid/"
         data = {
             "name": "",
             "description": "Movie description",
         }
-        response = APIClient().put(url, data=data)
+        response = self.client.put(
+            url,
+            data=data,
+            content_type="application/json",
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data == {
@@ -183,42 +177,52 @@ class TestUpdateAPI:
     def test_when_category_with_id_does_not_exist_then_return_404(
         self,
     ) -> None:
-        url = reverse("category-detail", kwargs={"pk": uuid4()})
+        url = f"/api/categories/{uuid4()}"
+
         data = {
             "name": "Not Movie",
             "description": "Another description",
             "is_active": False,
         }
-        response = APIClient().put(url, data=data)
+        response = self.client.put(
+            url,
+            data=data,
+            content_type="application/json",
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
-class TestDeleteAPI:
+class TestDeleteCategoryAPI(TestCase):
+    def setUp(self):
+        self.category_repo = CategoryDjangoRepository()
+        self.category = Category(
+            name="Movie",
+            description="Movie description",
+            is_active=True,
+        )
+        self.category_repo.insert(self.category)
+
     def test_when_category_pk_is_invalid_then_return_400(self) -> None:
-        url = reverse("category-detail", kwargs={"pk": "invalid-uuid"})
-        response = APIClient().delete(url)
+        url = f"/api/categories/invalid-uuid/"
+        response = self.client.delete(url, content_type="application/json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data == {"id": ["Must be a valid UUID."]}
 
     def test_when_category_not_found_then_return_404(self) -> None:
-        url = reverse("category-detail", kwargs={"pk": uuid4()})
-        response = APIClient().delete(url)
+        url = f"/api/categories/{uuid4()}/"
+        response = self.client.delete(url, content_type="application/json")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_when_category_found_then_delete_category(
         self,
-        category_movie: Category,
-        category_repository: CategoryDjangoRepository,
     ) -> None:
-        category_repository.save(category_movie)
-
-        url = reverse("category-detail", kwargs={"pk": category_movie.id})
-        response = APIClient().delete(url)
+        url = f"/api/categories/{self.category.id.value}/"
+        response = self.client.delete(url, content_type="application/json")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not response.data
-        assert category_repository.get_by_id(category_movie.id) is None
+        assert self.category_repo.find_by_id(self.category.id.value) is None

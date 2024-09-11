@@ -1,51 +1,73 @@
+from typing import Optional
 import uuid
 
 import pytest
-from src.core.category.application.use_cases.exceptions import CategoryNotFound
-from src.core.category.application.use_cases.update_category import (
-    UpdateCategory,
-    UpdateCategoryInput,
+
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
 )
-from core.category.infra.category_in_memory_repository import (
-    InMemoryICategoryRepository,
+from src.core.category.application.use_cases.update_category import (
+    UpdateCategoryInput,
+    UpdateCategoryOutput,
+    UpdateCategoryUseCase,
 )
 from src.core.category.domain.category import Category
+from src.django_project.category_app.repository import CategoryDjangoRepository
 
 
-class TestUpdateCategory:
-    def test_update_category_with_name_and_description(self):
-        category = Category(name="category", description="some description")
-        repository = InMemoryICategoryRepository()
-        repository.save(category)
+@pytest.mark.django_db
+class TestUpdateCategoryUseCaseInt:
+    category_repo: CategoryDjangoRepository
+    use_case: UpdateCategoryUseCase
 
-        use_case = UpdateCategory(repository=repository)
-        request = UpdateCategoryInput(
-            id=category.id,
-            name="movies",
-            description="new description",
-            is_active=False,
-        )
+    def setup_method(self) -> None:
+        self.category_repo = CategoryDjangoRepository()
+        self.use_case = UpdateCategoryUseCase(self.category_repo)
 
-        use_case.execute(request)
+    def test_input(self):
+        assert UpdateCategoryInput.__annotations__, {
+            "id": uuid.UUID,
+            "name": Optional[str],
+            "description": Optional[str],
+            "is_active": Optional[bool],
+        }
 
-        updated_category = repository.get_by_id(category.id)
+    def test_output(self):
+        assert issubclass(UpdateCategoryOutput, CategoryOutput)
 
-        assert updated_category.name == "movies"
-        assert updated_category.description == "new description"
-        assert updated_category.is_active is False
-
-    def test_when_category_does_not_exist_then_raise_exception(self):
-        repository = InMemoryICategoryRepository()
-        use_case = UpdateCategory(repository=repository)
-        request = UpdateCategoryInput(
+    def test_throw_exception_when_category_not_found(self):
+        input = UpdateCategoryInput(
             id=uuid.uuid4(),
-            name="movies",
-            description="new description",
-            is_active=False,
+            name="Movie",
+            description="some description",
+            is_active=True,
         )
 
         with pytest.raises(
-            CategoryNotFound, match=f"Category with {request.id} not found"
+            NotFoundException, match=f"Category with id {input.id} not found"
         ):
-            use_case.execute(request)
-                  
+            self.use_case.execute(input)
+
+    def test_must_be_able_to_update_a_category(self):
+        category = Category(
+            name="Movie", description="some description", is_active=True
+        )
+        self.category_repo.insert(category)
+
+        input = UpdateCategoryInput(
+            id=category.id.value,
+            name="Movie 2",
+            description="some description 2",
+            is_active=False,
+        )
+
+        output = self.use_case.execute(input)
+
+        assert output == UpdateCategoryOutput(
+            id=category.id.value,
+            name="Movie 2",
+            description="some description 2",
+            is_active=False,
+            created_at=category.created_at,
+        )

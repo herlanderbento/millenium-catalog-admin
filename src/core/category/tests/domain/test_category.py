@@ -1,117 +1,90 @@
-import pytest
-from uuid import UUID
+import datetime
+from typing import Annotated
 
-from src.core.category.domain.category import Category
+from pydantic import Strict
+from src.core._shared.domain.entity import AggregateRoot
+from src.core.category.domain.category import Category, CategoryId
+
 
 class TestCategory:
-  def test_name_is_required(self):
-    with pytest.raises(TypeError, match="missing 1 required positional argument: 'name'"):
-      Category()
-  
-  def test_name_must_have_less_than_255_characters(self):
-    with pytest.raises(ValueError, match="name cannot be longer than 255"):
-      Category(name="a" * 256)
+    def test_should_be_a_aggregate_root_subclass(self):
+        assert issubclass(Category, AggregateRoot)
 
-  def test_category_must_be_created_with_id_as_uuid(self):
-    category = Category("Category 1")
-    assert  isinstance(category.id, UUID)
-    assert type(category.id) == UUID
+    def test_should_be_slots(self):
+        assert Category.__slots__ == (
+            "id",
+            "name",
+            "description",
+            "is_active",
+            "created_at",
+        )
 
-  def test_created_category_with_default_values(self):
-    category = Category("Category 1", id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"))
-    assert category.id == UUID("6e864e27-3d3d-403e-867b-349b85a6e87f")
-    assert category.name == 'Category 1'
-    assert category.description == ""
-    assert category.is_active is True
+    def test_should_generate_a_new_id(self):
+        category = Category(name="Test Category")
+        assert category.id is not None
+        assert isinstance(category.id, CategoryId)
 
-  def test_category_is_created_as_active_by_default(self):
-    category = Category("Category 1")
-    assert category.is_active is True
+    def test_should_generate_a_new_created_at(self):
+        category = Category(name="Test Category")
+        assert category.created_at is not None
+        assert isinstance(category.created_at, datetime.datetime)
 
-  def test_category_can_be_deactivated(self):
-    category = Category(name="Category 1", is_active=False)
-    assert category.is_active is False
+    def test_should_be_equal_to_another_category_with_the_same_id(self):
+        category_id = CategoryId()
+        category1 = Category(id=category_id, name="Test Category 1")
+        category2 = Category(id=category_id, name="Test Category 1")
+        assert category1.equals(category2)
 
-  def test_category_is_created_with_provided_values(self):
-    category = Category(
-        "Category 1",
-        id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"),
-        description="This is a test category",
-        is_active=False,
-    )
-    assert category.id == UUID("6e864e27-3d3d-403e-867b-349b85a6e87f")
-    assert category.name == "Category 1"
-    assert category.description == "This is a test category"
-    assert category.is_active is False
+    def test_should_not_be_equal_to_another_category_with_a_different_id(self):
+        category1 = Category(id=CategoryId(), name="Test Category")
+        category2 = Category(id=CategoryId(), name="Test Category")
+        assert category1 != category2
 
-  def test_cannot_create_category_with_empty_name(self):
-    with pytest.raises(ValueError, match="name cannot be empty"):
-      Category(name="")
+    def test_should_generate_an_error_in_change_name(self):
+        category = Category(id=CategoryId(), name="Test Category")
+        category.change_name(1)
+        assert category.notification.has_errors() is True
+        assert len(category.notification.errors) == 1
+        assert category.notification.errors == {
+            "name": ["Input should be a valid string"]
+        }
 
-  def test_str_method(self):
-      category = Category("Category 1", description="Test description", is_active=True)
-      expected_str = "Category 1 - Test description (True)"
-      assert str(category) == expected_str
+    def test_should_change_name(self):
+        category = Category(id=CategoryId(), name="Test Category")
+        new_name = "New Test Category"
+        category.change_name(new_name)
+        assert category.name == new_name
 
-  def test_repr_method(self):
-    category_id = UUID("6e864e27-3d3d-403e-867b-349b85a6e87f")
-    category = Category("Category 1", id=category_id)
-    expected_repr = f"<Category Category 1 ({category_id})>"
-    assert repr(category) == expected_repr
+    def test_should_change_description(self):
+        category = Category(id=CategoryId(), name="Test Category")
+        new_description = "New Test Description"
+        category.change_description(new_description)
+        assert category.description == new_description
 
+    def test_should_generate_an_error_in_change_description(self):
+        category = Category(id=CategoryId(), name="Test Category")
+        category.change_description(1)
+        assert category.notification.has_errors() is True
+        assert len(category.notification.errors) == 1
+        assert category.notification.errors == {
+            "description": ["Input should be a valid string"]
+        }
 
-class TestUpdateCategory:
-  def test_update_category_with_name_and_description(self):
-    category = Category(name="category", description="some description")
+    def test_should_activate_category(self):
+        category = Category(id=CategoryId(), name="Test Category", is_active=False)
+        category.activate()
+        assert category.is_active is True
 
-    category.update_category(name="category 1", description="some description 1")
+    def test_should_deactivate_category(self):
+        category = Category(id=CategoryId(), name="Test Category", is_active=True)
+        category.deactivate()
+        assert category.is_active is False
 
-    assert category.name == "category 1"
-    assert category.description == "some description 1"
-
-  def test_update_category_with_invalid_name_raise_exception(self):
-    category = Category(name="category", description="some description")
-
-    with pytest.raises(ValueError, match="name cannot be longer than 255"):
-      category.update_category(name="a" * 256, description="some description")
-
-
-class TestActivateCategory:
-  def test_activate_inactive_category(self):
-    category = Category(name="category", is_active=False)
-
-    category.activate()
-
-    assert category.is_active is True
-
-  def test_activate_active_category(self):
-    category = Category(name="category", is_active=True)
-
-    category.activate()
-
-    assert category.is_active is True
-
-
-class TestDeactivateCategory:
-  def test_deactivate_active_category(self):
-    category = Category(name="category", is_active=True)
-
-    category.deactivate()
-
-    assert category.is_active is False
-
-  def test_deactivate_inactive_category(self):
-    category = Category(name="category", is_active=False)
-
-    category.deactivate()
-
-    assert category.is_active is False
-
-
-
-class TestEquality:
-  def test_when_categories_have_same_id_they_are_equal(self):
-    category1 = Category(name="category 1", id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"))
-    category2 = Category(name="category 1", id=UUID("6e864e27-3d3d-403e-867b-349b85a6e87f"))
-
-    assert category1 == category2
+    def test_fields_mapping(self):
+        assert Category.__annotations__ == {
+            "id": CategoryId,
+            "name": str,
+            "description": str | None,
+            "is_active": Annotated[bool, Strict(strict=True)],
+            "created_at": Annotated[datetime.datetime, Strict()],
+        }

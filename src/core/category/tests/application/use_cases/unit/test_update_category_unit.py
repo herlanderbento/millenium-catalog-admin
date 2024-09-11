@@ -1,144 +1,79 @@
-import unittest
-from unittest.mock import create_autospec
+from typing import Optional
+from uuid import UUID
 import uuid
-from src.core.category.application.use_cases.exceptions import CategoryNotFound
+
+import pytest
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
+)
+from src.core._shared.application.use_cases import UseCase
+from src.core.category.infra.category_in_memory_repository import (
+    CategoryInMemoryRepository,
+)
 from src.core.category.application.use_cases.update_category import (
-    UpdateCategory,
     UpdateCategoryInput,
+    UpdateCategoryOutput,
+    UpdateCategoryUseCase,
 )
 from src.core.category.domain.category_repository import ICategoryRepository
 from src.core.category.domain.category import Category
 
 
-class TestUpdateCategory(unittest.TestCase):
-    def test_update_category_name(self):
-        category = Category(
+class TestUpdateCategoryUseCaseUnit:
+    category_repo: CategoryInMemoryRepository
+    use_case: UpdateCategoryUseCase
+
+    def setup_method(self) -> None:
+        self.category_repo = CategoryInMemoryRepository()
+        self.use_case = UpdateCategoryUseCase(self.category_repo)
+
+    def test_if_instance_a_use_case(self):
+        assert issubclass(UpdateCategoryUseCase, UseCase)
+
+    def test_input(self):
+        assert UpdateCategoryInput.__annotations__, {
+            "id": UUID,
+            "name": Optional[str],
+            "description": Optional[str],
+            "is_active": Optional[bool],
+        }
+
+    def test_output(self):
+        assert issubclass(UpdateCategoryOutput, CategoryOutput)
+
+    def test_throw_exception_when_category_not_found(self):
+        input = UpdateCategoryInput(
             id=uuid.uuid4(),
-            name="category",
+            name="Movie",
             description="some description",
             is_active=True,
         )
 
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
+        with pytest.raises(
+            NotFoundException, match=f"Category with id {input.id} not found"
+        ):
+            self.use_case.execute(input)
 
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=category.id,
-            name="movies",
-        )
-
-        use_case.execute(request)
-
-        assert category.name == "movies"
-        mock_repository.update.assert_called_once_with(category)
-
-    def test_update_category_description(self):
+    def test_must_be_able_to_update_a_category(self):
         category = Category(
-            id=uuid.uuid4(),
-            name="category",
-            description="some description",
-            is_active=True,
+            name="Movie", description="some description", is_active=True
         )
+        self.category_repo.insert(category)
 
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
-
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=category.id,
-            description="new description",
-        )
-
-        use_case.execute(request)
-
-        assert category.description == "new description"
-        mock_repository.update.assert_called_once_with(category)
-
-    def test_activate_category(self):
-        category = Category(
-            id=uuid.uuid4(),
-            name="category",
-            description="some description",
+        input = UpdateCategoryInput(
+            id=category.id.value,
+            name="Movie 2",
+            description="some description 2",
             is_active=False,
         )
 
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
+        output = self.use_case.execute(input)
 
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=category.id,
-            is_active=True,
-        )
-
-        use_case.execute(request)
-
-        assert category.is_active == True
-        mock_repository.update.assert_called_once_with(category)
-
-    def test_deactivate_category(self):
-        category = Category(
-            id=uuid.uuid4(),
-            name="category",
-            description="some description",
-            is_active=True,
-        )
-
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
-
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=category.id,
+        assert output == UpdateCategoryOutput(
+            id=category.id.value,
+            name="Movie 2",
+            description="some description 2",
             is_active=False,
+            created_at=category.created_at,
         )
-
-        use_case.execute(request)
-
-        assert category.is_active == False
-        mock_repository.update.assert_called_once_with(category)
-
-    def test_update_category(self):
-        category = Category(
-            id=uuid.uuid4(),
-            name="category",
-            description="some description",
-            is_active=True,
-        )
-
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = category
-
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=category.id,
-            name="movies",
-            description="new description",
-            is_active=False,
-        )
-
-        use_case.execute(request)
-
-        assert category.name == "movies"
-        assert category.description == "new description"
-        assert category.is_active == False
-        mock_repository.update.assert_called_once_with(category)
-
-    def test_when_category_does_not_exist_then_raise_exception(self):
-        mock_repository = create_autospec(ICategoryRepository)
-        mock_repository.get_by_id.return_value = None
-
-        use_case = UpdateCategory(repository=mock_repository)
-        request = UpdateCategoryInput(
-            id=uuid.uuid4(),
-        )
-
-        with self.assertRaises(CategoryNotFound) as exc_info:
-            use_case.execute(request)
-
-        assert str(exc_info.exception) == f"Category with {request.id} not found"
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -1,47 +1,70 @@
-
-
 from uuid import UUID
 import uuid
 
 import pytest
-from src.core.category.application.use_cases.exceptions import CategoryNotFound
+
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
+)
+from src.core._shared.application.use_cases import UseCase
+from src.core.category.application.use_cases.get_category import (
+    GetCategoryInput,
+    GetCategoryUseCase,
+    GetCategoryOutput,
+)
 from src.core.category.domain.category import Category
-from src.core.category.application.use_cases.get_category import GetCategory, GetCategoryInput, GetCategoryOutput
-from core.category.infra.category_in_memory_repository import InMemoryICategoryRepository
+from django_project.category_app.repository import CategoryDjangoRepository
 
 
-class TestGetCategory:
-    def test_get_category(self):
+@pytest.mark.django_db
+class TestGetCategoryUseCaseInt:
+    category_repo: CategoryDjangoRepository
+    use_case: GetCategoryUseCase
+
+    def setup_method(self) -> None:
+        self.category_repo = CategoryDjangoRepository()
+        self.use_case = GetCategoryUseCase(self.category_repo)
+
+    def test_if_instance_a_use_case(self):
+        assert isinstance(self.use_case, UseCase)
+
+    def test_input_annotation(self):
+        assert GetCategoryInput.__annotations__, {
+            "id": uuid.UUID,
+        }
+
+    def test_output(self):
+        assert issubclass(GetCategoryOutput, CategoryOutput)
+
+    def test_throw_exception_when_category_not_found(self):
+        input = GetCategoryInput(
+            id=uuid.uuid4(),
+        )
+
+        with pytest.raises(
+            NotFoundException, match=f"Category with id {input.id} not found"
+        ):
+            self.use_case.execute(input)
+
+    def test_must_be_able_to_get_a_category(self):
         category = Category(
-            id=uuid.uuid4(),
             name="Movie",
-            description="Category for the movie",
+            description="some description",
             is_active=True,
         )
-        repository = InMemoryICategoryRepository(
-            categories=[category]
-        )
-        use_case = GetCategory(repository=repository)
-        request = GetCategoryInput(
-            id=category.id,
+        self.category_repo.insert(category)
+
+        input = GetCategoryInput(
+            id=category.id.value,
         )
 
-        response = use_case.execute(request)
+        output = self.use_case.execute(input)
 
-        assert response == GetCategoryOutput(
-            id=category.id,
+        assert output == GetCategoryOutput(
+            id=category.id.value,
             name="Movie",
-            description="Category for the movie",
+            description="some description",
             is_active=True,
+            created_at=category.created_at,
         )
-        
-    def test_when_category_does_not_exist_then_raise_exception(self):
-        repository = InMemoryICategoryRepository()
-        use_case = GetCategory(repository=repository)
-        request = GetCategoryInput(
-            id=uuid.uuid4(),
-        )
-
-        with pytest.raises(CategoryNotFound, match=f"Category with {request.id} not found"):
-            use_case.execute(request)
-

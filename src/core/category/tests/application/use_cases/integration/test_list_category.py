@@ -1,74 +1,59 @@
-import uuid
+import datetime
+import pytest
+
+
+from src.core._shared.application.pagination_output import PaginationOutput
+from src.core._shared.application.search_input import SearchInput
+from src.core._shared.application.use_cases import UseCase
+from src.core.category.application.use_cases.common.category_output import (
+    CategoryOutput,
+)
 from src.core.category.domain.category import Category
 from src.core.category.application.use_cases.list_category import (
-    CategoryOutput,
+    ListCategoriesInput,
+    ListCategoriesOutput,
     ListCategoriesUseCase,
-    ListCategoriesUseCaseRequest,
-    ListCategoriesUseCaseResponse,
-    ListOutputMeta,
-)
-from core.category.infra.category_in_memory_repository import (
-    InMemoryICategoryRepository,
 )
 
+from src.django_project.category_app.repository import CategoryDjangoRepository
 
-class TestListCategoriesUseCase:
-    def test_when_no_categories_in_repository_then_return_empty_list(self):
-        repository = InMemoryICategoryRepository()
-        use_case = ListCategoriesUseCase(repository=repository)
-        request = ListCategoriesUseCaseRequest()
-        response = use_case.execute(request)
 
-        assert response == ListCategoriesUseCaseResponse(
-            data=[],
-            meta=ListOutputMeta(
-                current_page=1,
-                per_page=15,
-                total=0,
+@pytest.mark.django_db
+class TestListCategoriesUseCaseInt:
+    category_repo: CategoryDjangoRepository
+    use_case: ListCategoriesUseCase
+
+    def setup_method(self) -> None:
+        self.category_repo = CategoryDjangoRepository()
+        self.use_case = ListCategoriesUseCase(self.category_repo)
+
+    def test_if_instance_a_use_case(self):
+        assert isinstance(self.use_case, UseCase)
+
+    def test_input(self):
+        assert issubclass(ListCategoriesInput, SearchInput)
+
+    def test_output(self):
+        assert issubclass(ListCategoriesOutput, PaginationOutput)
+
+    def test_should_be_able_list_category(self):
+        items = [
+            Category(name="category 1", description="some description", is_active=True),
+            Category(
+                name="category 2",
+                description="some description",
+                is_active=True,
+                created_at=datetime.datetime.now(datetime.timezone.utc)
+                + datetime.timedelta(seconds=200),
             ),
-        )
-
-    def test_return_existing_categories(self):
-        category_documentary = Category(
-            id=uuid.uuid4(),
-            name="Documentary",
-            description="Category for documentaries",
-            is_active=True,
-        )
-
-        category_movie = Category(
-            id=uuid.uuid4(),
-            name="Movie",
-            description="Category for movies",
-            is_active=True,
-        )
-
-        repository = InMemoryICategoryRepository()
-        repository.save(category_documentary)
-        repository.save(category_movie)
-
-        use_case = ListCategoriesUseCase(repository=repository)
-        request = ListCategoriesUseCaseRequest()
-        response = use_case.execute(request)
-
-        assert response == ListCategoriesUseCaseResponse(
-            data=[
-                CategoryOutput(
-                    id=category_documentary.id,
-                    name=category_documentary.name,
-                    description=category_documentary.description,
-                    is_active=category_documentary.is_active,
-                ),
-                CategoryOutput(
-                    id=category_movie.id,
-                    name=category_movie.name,
-                    description=category_movie.description,
-                    is_active=category_movie.is_active,
-                ),
-            ],
-            meta=ListOutputMeta(
-                current_page=1,
-                per_page=15,
-                total=2,
-            ),
+        ]
+        self.category_repo.bulk_insert(items)
+        input = ListCategoriesInput()
+        output = self.use_case.execute(input)
+        assert output == ListCategoriesOutput(
+            items=list(map(CategoryOutput.from_entity, items[::-1])),
+            total=2,
+            current_page=1,
+            per_page=15,
+            last_page=1,
         )

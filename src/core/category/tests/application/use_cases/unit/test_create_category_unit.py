@@ -1,38 +1,76 @@
-from unittest.mock import MagicMock
-from uuid import UUID
-
-import pytest
+from typing import Optional
+from src.core._shared.application.use_cases import UseCase
+from src.core.category.infra.category_in_memory_repository import (
+    CategoryInMemoryRepository,
+)
 from src.core.category.application.use_cases.create_category import (
-    CreateCategory,
     CreateCategoryInput,
     CreateCategoryOutput,
+    CreateCategoryUseCase,
 )
-from src.core.category.application.use_cases.exceptions import InvalidCategory
-from src.core.category.domain.category_repository import ICategoryRepository
 
+class TestCreateCategoryUseCaseUnit:
+    category_repo: CategoryInMemoryRepository
+    use_case: CreateCategoryUseCase
 
-class TestCreateCategory:
-    def test_create_category_with_valid_data(self):
-        mock_repository = MagicMock(ICategoryRepository)
-        use_case = CreateCategory(repository=mock_repository)
-        request = CreateCategoryInput(
+    def setup_method(self) -> None:
+        self.category_repo = CategoryInMemoryRepository()
+        self.use_case = CreateCategoryUseCase(self.category_repo)
+
+    def test_if_instance_a_use_case(self):
+        assert isinstance(self.use_case, UseCase)
+
+    def test_input_annotation(self):
+        assert CreateCategoryInput.__annotations__, {
+            'name': str,
+            'description': Optional[str],
+            'is_active': bool
+        }
+
+    def test_should_be_able_create_category(self):
+        input = CreateCategoryInput(
             name="Movie",
             description="Categories for the movie",
             is_active=True,  # default
         )
 
-        response = use_case.execute(request)
+        output = self.use_case.execute(input)
 
-        assert response.id is not None
-        assert isinstance(response, CreateCategoryOutput)
-        assert isinstance(response.id, UUID)
-        assert mock_repository.save.called is True
+        assert output == CreateCategoryOutput(
+            id=self.category_repo.items[0].id.value,
+            name="Movie",
+            description="Categories for the movie",
+            is_active=True,
+            created_at=self.category_repo.items[0].created_at,
+        )
 
-    def test_create_category_with_invalid_data(self):
-        use_case = CreateCategory(repository=MagicMock(ICategoryRepository))
+        input = CreateCategoryInput(
+            name="Movie",
+            is_active=True,
+        )
 
-        with pytest.raises(InvalidCategory, match="name cannot be empty") as exc_info:
-            use_case.execute(CreateCategoryInput(name=""))
+        output = self.use_case.execute(input)
 
-        assert exc_info.type is InvalidCategory
-        assert str(exc_info.value) == "name cannot be empty"
+        assert output == CreateCategoryOutput(
+            id=self.category_repo.items[1].id.value,
+            name="Movie",
+            description="",
+            is_active=True,
+            created_at=self.category_repo.items[1].created_at,
+        )
+
+        input = CreateCategoryInput(
+            name="Movie",
+            description="some description",
+            is_active=False,
+        )
+
+        output = self.use_case.execute(input)
+
+        assert output == CreateCategoryOutput(
+            id=self.category_repo.items[2].id.value,
+            name="Movie",
+            description="some description",
+            is_active=False,
+            created_at=self.category_repo.items[2].created_at,
+        )

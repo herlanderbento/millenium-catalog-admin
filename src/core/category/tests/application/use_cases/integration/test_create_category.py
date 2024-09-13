@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 
 import pytest
 from src.core.category.application.use_cases.common.category_output import CategoryOutput

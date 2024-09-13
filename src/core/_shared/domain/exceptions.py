@@ -10,3 +10,8 @@ class NotFoundException(Exception):
 
 class EntityValidationException(Exception):
     errors: Dict[str, List[str] | str]
+
+
+class RelatedNotFoundException(Exception):
+    def __init__(self, message: str = "Related entity not found"):
+        super().__init__(message)

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 from django.core.paginator import Paginator
 
 from src.core._shared.domain.search_params import SortDirection
@@ -28,6 +28,12 @@ class CategoryDjangoRepository(ICategoryRepository):
     def find_by_id(self, entity_id: CategoryId) -> Category | None:
         model = CategoryModel.objects.filter(id=entity_id).first()
         return CategoryModelMapper.to_entity(model) if model else None
+
+    def find_by_ids(self, ids: Set[CategoryId]) -> List[Category]:
+        models = CategoryModel.objects.filter(
+            id__in=[str(category_id) for category_id in ids]
+        )
+        return [CategoryModelMapper.to_entity(model) for model in models]
 
     def find_all(self) -> list[Category]:
         models = CategoryModel.objects.all()

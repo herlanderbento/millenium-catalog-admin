@@ -8,7 +8,7 @@ from pydantic import PlainSerializer
 from src.core.category.application.use_cases.common.category_output import (
     CategoryOutput,
 )
-from src.core.category.application.use_cases.list_category import ListCategoriesOutput
+from src.core.category.application.use_cases.list_categories import ListCategoriesOutput
 from src.django_project.shared_app.presenters import (
     CollectionPresenter,
     ResourcePresenter,

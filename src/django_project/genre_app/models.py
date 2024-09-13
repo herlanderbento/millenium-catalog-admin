@@ -7,7 +7,7 @@ from src.django_project.category_app.models import CategoryModel
 
 
 class GenreModel(models.Model):
-    app_label = "genre_app"
+    # app_label = "genre_app"
 
     id = models.UUIDField(primary_key=True, editable=False, default=uuid4)
     name = models.CharField(max_length=255)

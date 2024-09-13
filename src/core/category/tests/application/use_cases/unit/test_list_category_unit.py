@@ -6,7 +6,7 @@ from src.core.category.infra.category_in_memory_repository import (
     CategoryInMemoryRepository,
 )
 from src.core.category.domain.category import Category
-from src.core.category.application.use_cases.list_category import (
+from src.core.category.application.use_cases.list_categories import (
     CategoryOutput,
     ListCategoriesInput,
     ListCategoriesOutput,

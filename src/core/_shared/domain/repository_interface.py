@@ -43,20 +43,10 @@ SearchInput = TypeVar("SearchInput")
 SearchOutput = TypeVar("SearchOutput")
 
 
-# class ISearchableRepository(
-#     IRepository[E, EntityId], Generic[E, EntityId, SearchInput, SearchOutput]
-# ):
-#     sortable_fields: List[str] = []
-
-#     @abstractmethod
-#     def search(self, props: SearchInput) -> SearchOutput:
-#         raise NotImplementedError()
-
-
 class ISearchableRepository(Generic[E, EntityId], IRepository[E, EntityId], ABC):
 
     sortable_fields: List[str] = []
 
     @abstractmethod
-    def search(self, input_params: Any) -> Any:
+    def search(self, props: Any) -> Any:
         raise NotImplementedError()

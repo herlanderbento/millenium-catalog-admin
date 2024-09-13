@@ -9,6 +9,7 @@ from rest_framework.status import (
 from src.core._shared.domain.exceptions import (
     EntityValidationException,
     NotFoundException,
+    RelatedNotFoundException,
 )
 
 
@@ -35,10 +36,19 @@ def handle_not_found_error(exc: NotFoundException, context):
     return response
 
 
+def handle_related_not_found_error(exc: RelatedNotFoundException, context):
+    response = Response({"message": exc.args[0]}, HTTP_404_NOT_FOUND)
+    return response
+
+
 handlers = [
     {"exception": ValidationError, "handle": handle_validation_error},
     {"exception": EntityValidationException, "handle": handle_entity_validation_error},
     {"exception": NotFoundException, "handle": handle_not_found_error},
+    {
+        "exception": RelatedNotFoundException,
+        "handle": handle_related_not_found_error,
+    },  # Added new handler
 ]
 
 

@@ -1,21 +1,24 @@
 from dataclasses import dataclass
 from uuid import UUID
-from src.core.genre.application.use_cases.exceptions import GenreNotFound
-from src.core.genre.domain.genre_repository import GenreRepository
+from src.core._shared.domain.exceptions import NotFoundException
+from src.core.genre.domain.genre import Genre
+from src.core.genre.domain.genre_repository import IGenreRepository
 
 
-class DeleteGenre:
-    @dataclass
-    class Input:
-        id: UUID
+@dataclass
+class DeleteGenreInput:
+    id: UUID
 
-    def __init__(self, genre_repository: GenreRepository):
+
+class DeleteGenreUseCase:
+
+    def __init__(self, genre_repository: IGenreRepository):
         self.genre_repository = genre_repository
 
-    def execute(self, input: Input) -> None:
-        genre = self.genre_repository.get_by_id(input.id)
+    def execute(self, input: DeleteGenreInput) -> None:
+        genre = self.genre_repository.find_by_id(input.id)
 
         if genre is None:
-            raise GenreNotFound(f"Genre with ID {input.id} not found")
+            raise NotFoundException(input.id, Genre)
 
         self.genre_repository.delete(input.id)

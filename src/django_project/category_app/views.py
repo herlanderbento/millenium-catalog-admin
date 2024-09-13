@@ -33,7 +33,7 @@ from src.core.category.application.use_cases.get_category import (
     GetCategoryInput,
     GetCategoryUseCase,
 )
-from src.core.category.application.use_cases.list_category import (
+from src.core.category.application.use_cases.list_categories import (
     ListCategoriesInput,
     ListCategoriesUseCase,
 )

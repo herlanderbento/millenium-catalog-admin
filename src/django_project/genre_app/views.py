@@ -1,65 +1,89 @@
 from uuid import UUID
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
-    HTTP_400_BAD_REQUEST,
     HTTP_204_NO_CONTENT,
-    HTTP_404_NOT_FOUND,
 )
 
-from src.core.genre.application.use_cases.update_genre import UpdateGenre
-from src.core.genre.application.use_cases.exceptions import GenreNotFound
-from src.core.genre.application.use_cases.delete_genre import DeleteGenre
-from src.core.genre.application.use_cases.list_genre import ListGenre
-from src.core.genre.application.use_cases.exceptions import (
-    InvalidGenre,
-    RelatedCategoriesNotFound,
+
+from src.core.genre.domain.genre_repository import GenreFilter
+from src.core.genre.application.use_cases.common.genre_output import GenreOutput
+from src.core.genre.application.use_cases.create_genre import (
+    CreateGenreInput,
+    CreateGenreUseCase,
+)
+from src.core.genre.application.use_cases.delete_genre import (
+    DeleteGenreInput,
+    DeleteGenreUseCase,
+)
+from src.core.genre.application.use_cases.list_genres import (
+    ListGenresInput,
+    ListGenresUseCase,
+)
+from src.core.genre.application.use_cases.update_genre import (
+    UpdateGenreInput,
+    UpdateGenreUseCase,
 )
 from src.django_project.genre_app.serializers import (
     CreateGenreInputSerializer,
-    CreateGenreOutputSerializer,
     DeleteGenreInputSerializer,
-    ListGenreOutputSerializer,
     UpdateGenreInputSerializer,
 )
 from src.django_project.category_app.repository import CategoryDjangoRepository
 from src.django_project.genre_app.repository import GenreDjangoRepository
-from src.core.genre.application.use_cases.create_genre import CreateGenre
+from src.django_project.genre_app.presenters import (
+    GenreCollectionPresenter,
+    GenrePresenter,
+)
+from src.django_project.shared_app.filter_extractor import FilterExtractor
 
 
-class GenreViewSet(viewsets.ViewSet):
+class GenreViewSet(viewsets.ViewSet, FilterExtractor):
+    def __init__(self, **kwargs):
+        genre_repo = GenreDjangoRepository()
+        category_repo = CategoryDjangoRepository()
+
+        self.create_use_case = CreateGenreUseCase(genre_repo, category_repo)
+        self.list_use_case = ListGenresUseCase(genre_repo)
+        self.update_use_case = UpdateGenreUseCase(genre_repo, category_repo)
+        self.delete_use_case = DeleteGenreUseCase(genre_repo)
+
     def create(self, request: Request) -> Response:
         serializer = CreateGenreInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        input = CreateGenre.Input(**serializer.validated_data)
-        use_case = CreateGenre(
-            genre_repository=GenreDjangoRepository(),
-            category_repository=CategoryDjangoRepository(),
-        )
-
-        try:
-            output = use_case.execute(input)
-        except (InvalidGenre, RelatedCategoriesNotFound) as error:
-            return Response(status=HTTP_400_BAD_REQUEST, data={"error": str(error)})
+        input = CreateGenreInput(**serializer.validated_data)
+        output = self.create_use_case.execute(input)
 
         return Response(
-            status=HTTP_201_CREATED, data=CreateGenreOutputSerializer(output).data
+            status=HTTP_201_CREATED,
+            data=GenreViewSet.serialize(output),
         )
 
     def list(self, request: Request) -> Response:
-        use_case = ListGenre(
-            genre_repository=GenreDjangoRepository(),
+        query_params = request.query_params.dict()
+
+        filters = self.extract_filters(query_params)
+        input = ListGenresInput(
+            **query_params,
+            filter=(
+                GenreFilter(
+                    name=filters.get("name"),
+                    categories_id=filters.get("categories_id"),
+                )
+            )
         )
-        output = use_case.execute(input=ListGenre.Input())
+        output = self.list_use_case.execute(input)
 
-        return Response(status=HTTP_200_OK, data=ListGenreOutputSerializer(output).data)
+        return Response(
+            status=HTTP_200_OK,
+            data=GenreCollectionPresenter(output=output).serialize(),
+        )
 
-    def update(self, request, pk: UUID = None):
+    def update(self, request: Request, pk: UUID = None):
         serializer = UpdateGenreInputSerializer(
             data={
                 **request.data,
@@ -68,38 +92,24 @@ class GenreViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
 
-        input = UpdateGenre.Input(**serializer.validated_data)
+        input = UpdateGenreInput(**serializer.validated_data)
+        output = self.update_use_case.execute(input)
 
-        use_case = UpdateGenre(
-            genre_repository=GenreDjangoRepository(),
-            category_repository=CategoryDjangoRepository(),
+        return Response(
+            status=HTTP_200_OK,
+            data=GenreViewSet.serialize(output),
         )
-
-        try:
-            use_case.execute(input)
-        except GenreNotFound:
-            return Response(
-                status=HTTP_404_NOT_FOUND,
-                data={"error": f"Genre with id {pk} not found"},
-            )
-        except (InvalidGenre, RelatedCategoriesNotFound) as error:
-            return Response(
-                status=HTTP_400_BAD_REQUEST,
-                data={"error": str(error)},
-            )
-
-        return Response(status=HTTP_204_NO_CONTENT)
 
     def destroy(self, request: Request, pk: UUID = None):
         serializer = DeleteGenreInputSerializer(data={"id": pk})
         serializer.is_valid(raise_exception=True)
 
-        input = DeleteGenre.Input(**serializer.validated_data)
-        use_case = DeleteGenre(genre_repository=GenreDjangoRepository())
+        input = DeleteGenreInput(**serializer.validated_data)
 
-        try:
-            use_case.execute(input)
-        except GenreNotFound as error:
-            return Response(status=HTTP_404_NOT_FOUND, data={"error": str(error)})
+        self.delete_use_case.execute(input=input)
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def serialize(output: GenreOutput):
+        return GenrePresenter.from_output(output).serialize()

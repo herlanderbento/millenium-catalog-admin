@@ -36,7 +36,4 @@ class ListCategoriesUseCase(UseCase):
 
     def __to_output(self, result: CategorySearchResult) -> ListCategoriesOutput:
         items = list(map(CategoryOutput.from_entity, result.items))
-        return ListCategoriesOutput.from_search_result(
-            items,
-            result,
-        )
+        return ListCategoriesOutput.from_search_result(items, result)

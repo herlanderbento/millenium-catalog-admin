@@ -1,4 +1,5 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import List, Set
 from src.core._shared.domain.repository_interface import ISearchableRepository
 from src.core._shared.domain.search_params import SearchParams
 from src.core._shared.domain.search_result import SearchResult
@@ -14,4 +15,6 @@ class CategorySearchResult(SearchResult[Category]):
 
 
 class ICategoryRepository(ISearchableRepository[Category, CategoryId], ABC):
-    pass
+    @abstractmethod
+    def find_by_ids(self, ids: Set[CategoryId]) -> List[Category]:
+        pass

@@ -1,56 +1,76 @@
 from dataclasses import dataclass, field
-from uuid import UUID
-from typing import Set
-import uuid
+import datetime
+from typing import Annotated, Set
+
+from pydantic import Strict
+
+from src.core._shared.domain.entity import AggregateRoot
+from src.core._shared.domain.value_objects import Uuid
+from src.core.category.domain.category import CategoryId
 
 
 @dataclass
-class Genre:
+class CreateGenreCommand:
     name: str
+    categories_id: Set[CategoryId]
     is_active: bool = True
-    categories: Set[UUID] = field(default_factory=set)
-    id: UUID = field(default_factory=uuid.uuid4)
 
-    def __post_init__(self):
-        self.validate()
 
-    def validate(self):
-        if len(self.name) > 255:
-            raise ValueError("name cannot be longer than 255")
+class GenreId(Uuid):
+    pass
 
-        if not self.name:
-            raise ValueError("name cannot be empty")
 
-    def __str__(self):
-        return f"{self.name} (active: {self.is_active})"
+@dataclass(slots=True, kw_only=True)
+class Genre(AggregateRoot):
+    id: GenreId = field(default_factory=GenreId)
+    name: str
+    categories_id: Set[CategoryId]
+    is_active: bool = True
+    created_at: Annotated[datetime.datetime, Strict()] = field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
-    def __repr__(self):
-        return f"<Genre {self.name} ({self.id})>"
+    @staticmethod
+    def create(command: CreateGenreCommand):
+        return Genre(
+            name=command.name,
+            categories_id=command.categories_id,
+            is_active=command.is_active,
+        )
 
-    def __eq__(self, other):
-        if not isinstance(other, Genre):
-            return False
+    @property
+    def entity_id(self) -> Uuid:
+        return self.id.value
 
-        return self.id == other.id
-
-    def add_category(self, category_id: UUID) -> None:
-        self.categories.add(category_id)
-
-    def remove_category(self, category_id: UUID) -> None:
-        self.categories.remove(category_id)
-
-    def change_name(self, name):
+    def change_name(self, name: str):
+        print(f"change_name {name}")
         self.name = name
         self.validate()
 
-    def update_categories(self, category_ids: set[UUID]):
-        self.categories = category_ids
+    def add_category_id(self, category_id: CategoryId):
+        self.categories_id.add(category_id.value)
+        self.validate()
+
+    def remove_category_id(self, category_id: CategoryId):
+        self.categories_id.remove(category_id.value)
+        self.validate()
+
+    def sync_categories_id(self, categories_id: Set[CategoryId]):
+        self.categories_id = {CategoryId(id_) for id_ in categories_id}
         self.validate()
 
     def activate(self):
         self.is_active = True
-        self.validate()
 
     def deactivate(self):
         self.is_active = False
-        self.validate()
+
+    def validate(self):
+        self._validate(
+            {
+                "id": self.id,
+                "name": self.name,
+                "categories_id": self.categories_id,
+                "created_at": self.created_at,
+            }
+        )

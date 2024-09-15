@@ -23,14 +23,11 @@ class GenreModelMapper:
 
     @staticmethod
     def to_entity(model: GenreModel) -> Genre:
-        categories = model.categories.all()  # Ajuste se necessário
         return Genre(
             id=GenreId(model.id),
             name=model.name,
-            # categories_id={
-            #     CategoryId(category.id)
-            #     for category in model._prefetched_objects_cache["categories"]
-            # },
-            categories_id={CategoryId(category.id) for category in categories},
+            categories_id={
+                CategoryId(category.id) for category in model.categories.all()
+            },
             created_at=model.created_at,
         )

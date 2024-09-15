@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 from django.core.paginator import Paginator
 
 from src.core._shared.domain.search_params import SortDirection
@@ -32,6 +32,12 @@ class CastMemberDjangoRepository(ICastMemberRepository):
         model = self.cast_member_model.objects.filter(id=entity_id).first()
         return CastMemberModelMapper.to_entity(model) if model else None
 
+    def find_by_ids(self, ids: Set[CastMemberId]) -> List[CastMember]:
+        models = self.cast_member_model.objects.filter(
+            id__in=[str(category_id) for category_id in ids]
+        )
+        return [CastMemberModelMapper.to_entity(model) for model in models]
+
     def find_all(self) -> List[CastMember]:
         models = self.cast_member_model.objects.all()
         return [CastMemberModelMapper.to_entity(model) for model in models]
@@ -39,7 +45,9 @@ class CastMemberDjangoRepository(ICastMemberRepository):
     def update(self, entity: CastMember) -> None:
         model = CastMemberModelMapper.to_model(entity)
 
-        affected_rows = self.cast_member_model.objects.filter(id=entity.id.value).update(
+        affected_rows = self.cast_member_model.objects.filter(
+            id=entity.id.value
+        ).update(
             name=model.name,
             type=model.type,
         )

@@ -20,20 +20,23 @@ from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
 
+from src.django_project.video_app.views import VideoViewSet
 from src.django_project.cast_member_app.views import CastMemberViewSet
 from src.django_project.genre_app.views import GenreViewSet
 from src.django_project.category_app.views import CategoryViewSet
 
+
 class CustomRouter(DefaultRouter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.trailing_slash = '/?' 
+        self.trailing_slash = "/?"
+
 
 router = CustomRouter()
 router.register(r"api/categories", CategoryViewSet, basename="category")
 router.register(r"api/genres", GenreViewSet, basename="genre")
 router.register(r"api/cast-members", CastMemberViewSet, basename="cast_member")
-
+router.register(r"api/videos", VideoViewSet, basename="videos")
 
 
 urlpatterns = [

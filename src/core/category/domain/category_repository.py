@@ -15,6 +15,4 @@ class CategorySearchResult(SearchResult[Category]):
 
 
 class ICategoryRepository(ISearchableRepository[Category, CategoryId], ABC):
-    @abstractmethod
-    def find_by_ids(self, ids: Set[CategoryId]) -> List[Category]:
-        pass
+    pass

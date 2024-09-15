@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "src.django_project.category_app",
     "src.django_project.genre_app",
     "src.django_project.cast_member_app",
+    "src.django_project.video_app",
     "src.django_project.shared_app",
 ]
 
@@ -117,6 +118,12 @@ USE_I18N = True
 
 USE_TZ = True
 
+## CLOUDFLARE settings
+R2_ACCESS_KEY_ID = "073441926d82a494bbcf893342abdb54"
+R2_SECRET_ACCESS_KEY = "1afe99a9a9b39f8be4aa8779df6ace033f4c842a6320dd00aec5be0464385b48"
+R2_BUCKET_NAME = "millenium-catalog-admin"
+R2_ACCOUNT_ID = "d586beb1abf0a9c7624500361c1a4ba7"  # O ID da conta no Cloudflare
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -130,7 +137,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
-    'EXCEPTION_HANDLER': 'src.django_project.shared_app.exception_handler.custom_exception_handler'
+    "EXCEPTION_HANDLER": "src.django_project.shared_app.exception_handler.custom_exception_handler",
 }
 
 APPEND_SLASH = True

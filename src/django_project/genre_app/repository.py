@@ -39,6 +39,12 @@ class GenreDjangoRepository(IGenreRepository):
         model = GenreModel.objects.filter(id=entity_id).first()
         return GenreModelMapper.to_entity(model) if model else None
 
+    def find_by_ids(self, ids: Set[GenreId]) -> List[Genre]:
+        models = GenreModel.objects.filter(
+            id__in=[str(category_id) for category_id in ids]
+        )
+        return [GenreModelMapper.to_entity(model) for model in models]
+
     def find_all(self) -> List[Genre]:
         return [
             GenreModelMapper.to_entity(model)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Type, Optional, TypeVar, Generic
+from typing import Any, List, Set, Type, Optional, TypeVar, Generic
 
 from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.entity import AggregateRoot
@@ -23,6 +23,10 @@ class IRepository(ABC, Generic[E, EntityId]):
 
     @abstractmethod
     def find_all(self) -> List[E]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def find_by_ids(self, entity_ids: Set[EntityId]) -> List[E]:
         raise NotImplementedError()
 
     @abstractmethod

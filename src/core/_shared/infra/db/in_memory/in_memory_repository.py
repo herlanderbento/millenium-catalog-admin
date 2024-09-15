@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, List, Set, Type, TypeVar
 from uuid import UUID
 from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.exceptions import NotFoundException
@@ -26,6 +26,9 @@ class InMemoryRepository(IRepository[E, EntityId], ABC):
 
     def find_all(self) -> List[E]:
         return self.items
+
+    def find_by_ids(self, ids: Set[EntityId]) -> List[E]:
+        return [entity for entity in self._items if entity.id in ids]
 
     def update(self, entity: E) -> None:
         entity_found = self._get(entity.entity_id)

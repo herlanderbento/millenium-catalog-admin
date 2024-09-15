@@ -38,15 +38,11 @@ class CreateGenreUseCase(UseCase):
         if len(categories_ids) != len(input.categories_id):
             raise RelatedNotFoundException(
                 f"Categories with provided IDs not found: {input.categories_id - categories_ids}"
-            )
+            ) 
 
-        genre = Genre(
-            name=input.name,
-            categories_id=input.categories_id,
-            is_active=input.is_active,
-        )
+        genre = Genre.create(input)
 
-        self.genre_repo.insert(genre)
+        self.genre_repo.insert(genre) 
 
         return self.__to_output(genre)
 

@@ -66,34 +66,6 @@ class VideoPresenter(ResourcePresenter):
 class VideoCollectionPresenter(CollectionPresenter):
     output: ListVideosOutput
 
-    # def __post_init__(self):
-    #     self.data = [
-    #         VideoPresenter.from_output(
-    #             id=item.id,
-    #             title=item.title,
-    #             description=item.description,
-    #             launch_year=item.launch_year,
-    #             duration=item.duration,
-    #             rating=(
-    #                 Rating(item.rating) if isinstance(item.rating, str) else item.rating
-    #             ),
-    #             opened=item.opened,
-    #             published=item.published,
-    #             categories_id=item.categories_id,
-    #             genres_id=item.genres_id,
-    #             cast_members_id=item.cast_members_id,
-    #             banner=item.banner,
-    #             thumbnail=item.thumbnail,
-    #             thumbnail_half=item.thumbnail_half,
-    #             trailer=item.trailer,
-    #             video=item.video,
-    #             created_at=item.created_at,
-    #         )
-    #         for item in self.output.items
-    #     ]
-
-    #     self.pagination = self.output
-
     def __post_init__(self):
         self.data = [
             VideoPresenter.from_output(item)  # Passar o objeto item diretamente

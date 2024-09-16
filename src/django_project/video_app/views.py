@@ -3,14 +3,18 @@ from rest_framework import viewsets
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 
-
+from src.core.video.application.use_cases.upload_image_media import (
+    UploadImageMediaInput,
+    UploadImageMediaUseCase,
+)
 from src.core._shared.events.message_bus import MessageBus
 from src.core._shared.infra.storage.local_storage import LocalStorage
 from src.core._shared.infra.storage.s3_storage import S3Storage
-from src.core.video.application.use_cases.upload_video import (
-    UploadVideoInput,
-    UploadVideoUseCase,
+from src.core.video.application.use_cases.upload_audio_video_media import (
+    UploadAudioVideoMediaInput,
+    UploadAudioVideoMediaUseCase,
 )
 from src.core.video.application.use_cases.delete_video import (
     DeleteVideoInput,
@@ -44,7 +48,8 @@ from src.django_project.video_app.serializers import (
     CreateVideoInputSerializer,
     DeleteVideoInputSerializer,
     GetVideoInputSerializer,
-    UploadVideoInputSerializer,
+    UploadAudioVideoMediaInputSerializer,
+    UploadImageMediaInputSerializer,
 )
 
 
@@ -67,11 +72,13 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         self.get_use_case = GetVideoUseCase(video_repo)
         self.list_use_case = ListVideosUseCase(video_repo)
         self.delete_use_case = DeleteVideoUseCase(video_repo)
-        self.upload_use_case = UploadVideoUseCase(
+        self.upload_audio_video_media = UploadAudioVideoMediaUseCase(
             video_repo=video_repo,
             storage=storage,
             message_bus=message_bus,
         )
+
+        self.upload_image_media = UploadImageMediaUseCase(video_repo, storage)
 
     def create(self, request: Request) -> Response:
         serializer = CreateVideoInputSerializer(data=request.data)
@@ -123,22 +130,72 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
     def update(self, request: Request, pk: None):
         raise NotImplementedError
 
-    def partial_update(self, request: Request, pk: UUID = None):
-        serializer = UploadVideoInputSerializer(data={"id": pk})
+    @action(detail=True, methods=["patch"], url_path="upload-video")
+    def upload_video(self, request: Request, pk: UUID = None):
+        serializer = UploadAudioVideoMediaInputSerializer(data={"id": pk})
         serializer.is_valid(raise_exception=True)
 
-        file = request.FILES["video_file"]
-        content = file.read()
-        content_type = file.content_type
+        field = request.FILES.get("video") or request.FILES.get("trailer")
 
-        input = UploadVideoInput(
+        if not field:
+            return Response(
+                {"detail": "No video or trailer file uploaded."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        file = field
+        print(f"Uploading video {file}")
+
+        input = UploadAudioVideoMediaInput(
             **serializer.validated_data,
+            field="video" if "video" in request.FILES else "trailer",
             file_name=file.name,
-            content=content,
-            content_type=content_type,
+            content=file.read(),
+            content_type=file.content_type,
         )
 
-        output = self.upload_use_case.execute(input)
+        output = self.upload_audio_video_media.execute(input)
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=VideoViewSet.serialize(output),
+        )
+
+    @action(detail=True, methods=["patch"], url_path="upload-images")
+    def upload_image(self, request: Request, pk: UUID = None):
+        serializer = UploadImageMediaInputSerializer(data={"id": pk})
+        serializer.is_valid(raise_exception=True)
+
+        file_fields = {
+            "banner": "banner",
+            "thumbnail": "thumbnail",
+            "thumbnail_half": "thumbnail_half",
+        }
+
+        field = next(
+            # (key for field_name, key in file_fields.items() if key in request.FILES),
+            # None,
+            (field for field, key in file_fields.items() if key in request.FILES),
+            None,
+        )
+
+        if field is None:
+            return Response(
+                {"detail": "No banner, thumbnail, or thumbnail_half file uploaded."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        file = request.FILES[field]
+
+        input = UploadImageMediaInput(
+            **serializer.validated_data,
+            field=field,
+            file_name=file.name,
+            content=file.read(),
+            content_type=file.content_type,
+        )
+
+        output = self.upload_image_media.execute(input)
 
         return Response(
             status=status.HTTP_200_OK,

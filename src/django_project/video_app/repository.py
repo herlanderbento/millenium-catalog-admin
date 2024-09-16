@@ -14,7 +14,11 @@ from src.core.video.domain.video_repository import (
 )
 
 from src.django_project.video_app.mappers import VideoModelMapper
-from src.django_project.video_app.models import AudioVideoMediaModel, VideoModel
+from src.django_project.video_app.models import (
+    AudioVideoMediaModel,
+    ImageMediaModel,
+    VideoModel,
+)
 from src.django_project.category_app.models import CategoryModel
 from src.django_project.cast_member_app.models import CastMemberModel
 from src.django_project.genre_app.models import GenreModel
@@ -48,52 +52,6 @@ class VideoDjangoRepository(IVideoRepository):
         models = VideoModel.objects.all()
         return [VideoModelMapper.to_entity(model) for model in models]
 
-    # def update(self, entity: Video) -> None:
-    #     model = VideoModel.objects.filter(pk=entity.id.value).update(
-    #         title=entity.title,
-    #         description=entity.description,
-    #         launch_year=entity.launch_year,
-    #         duration=entity.duration,
-    #         rating=entity.rating,
-    #         opened=entity.opened,
-    #         published=entity.published,
-    #         created_at=entity.created_at,
-    #     )
-
-    #     if not model:
-    #         raise NotFoundException(entity.id.value, self.get_entity())
-
-    #     AudioVideoMediaModel.objects.filter(id=entity.id.value).delete()
-
-    #     model.video = (
-    #         AudioVideoMediaModel.objects.create(
-    #             name=entity.video.name,
-    #             raw_location=entity.video.raw_location,
-    #             encoded_location=entity.video.encoded_location,
-    #             status=entity.video.status,
-    #         )
-    #         if entity.video
-    #         else None
-    #     )
-
-    #     categories_set = VideoModel.objects.get(pk=entity.id.value).categories
-    #     categories_set.clear()
-    #     categories_set.add(
-    #         *[category_id.value for category_id in entity.categories_id],
-    #     )
-
-    #     genres_set = VideoModel.objects.get(pk=entity.id.value).genres
-    #     genres_set.clear()
-    #     genres_set.add(
-    #         *[genre_id.value for genre_id in entity.genres_id],
-    #     )
-
-    #     cast_members_set = VideoModel.objects.get(pk=entity.id.value).cast_members
-    #     cast_members_set.clear()
-    #     cast_members_set.add(
-    #         *[cast_member_id.value for cast_member_id in entity.cast_members_id],
-    #     )
-
     def update(self, entity: Video) -> None:
         model = VideoModel.objects.filter(pk=entity.id.value).first()
 
@@ -111,6 +69,33 @@ class VideoDjangoRepository(IVideoRepository):
 
         AudioVideoMediaModel.objects.filter(id=model.video_id).delete()
 
+        model.banner = (
+            ImageMediaModel.objects.create(
+                name=entity.banner.name,
+                raw_location=entity.banner.raw_location,
+            )
+            if entity.banner
+            else None
+        )
+
+        model.thumbnail = (
+            ImageMediaModel.objects.create(
+                name=entity.thumbnail.name,
+                raw_location=entity.thumbnail.raw_location,
+            )
+            if entity.thumbnail
+            else None
+        )
+
+        model.thumbnail_half = (
+            ImageMediaModel.objects.create(
+                name=entity.thumbnail_half.name,
+                raw_location=entity.thumbnail_half.raw_location,
+            )
+            if entity.thumbnail_half
+            else None
+        )
+
         model.video = (
             AudioVideoMediaModel.objects.create(
                 name=entity.video.name,
@@ -119,6 +104,17 @@ class VideoDjangoRepository(IVideoRepository):
                 status=entity.video.status,
             )
             if entity.video
+            else None
+        )
+
+        model.trailer = (
+            AudioVideoMediaModel.objects.create(
+                name=entity.trailer.name,
+                raw_location=entity.trailer.raw_location,
+                encoded_location=entity.trailer.encoded_location,
+                status=entity.trailer.status,
+            )
+            if entity.trailer
             else None
         )
 

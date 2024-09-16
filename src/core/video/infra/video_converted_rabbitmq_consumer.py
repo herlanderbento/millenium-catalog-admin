@@ -4,12 +4,17 @@ from uuid import UUID
 
 import pika
 
-from core.video.domain.audio_video_media import MediaStatus, MediaType
+from src.core.video.application.use_cases.process_audio_video_media import (
+    ProcessAudioVideoMediaInput,
+    ProcessAudioVideoMediaUseCase,
+)
+from src.core.video.domain.audio_video_media import MediaStatus, MediaType
 from src.core._shared.events.abstract_consumer import AbstractConsumer
-# from src.core.video.application.use_cases.process_audio_video_media import (
-#     ProcessAudioVideoMedia,
-# )
-from src.django_project.video_app.repository import DjangoORMVideoRepository
+
+
+from src.django_project.video_app.repository import (
+    VideoDjangoRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +51,16 @@ class VideoConvertedRabbitMQConsumer(AbstractConsumer):
             status = MediaStatus(message["status"])
 
             # Execução do caso de uso
-            # process_audio_video_media_input = ProcessAudioVideoMedia.Input(
-            #     video_id=aggregate_id,
-            #     encoded_location=encoded_location,
-            #     media_type=media_type,
-            #     status=status,
-            # )
-            # print("Calling use case with input", process_audio_video_media_input)
-            # use_case = ProcessAudioVideoMedia(
-            #     video_repository=DjangoORMVideoRepository()
-            # )
-            # use_case.execute(request=process_audio_video_media_input)
-        except Exception as e:
+            process_audio_video_media_input = ProcessAudioVideoMediaInput(
+                video_id=aggregate_id,
+                encoded_location=encoded_location,
+                media_type=media_type,
+                status=status,
+            )
+            print("Calling use case with input", process_audio_video_media_input)
+            use_case = ProcessAudioVideoMediaUseCase(video_repo=VideoDjangoRepository())
+            use_case.execute(request=process_audio_video_media_input)
+        except Exception:
             logger.error(f"Error processing payload {message}", exc_info=True)
             return
 

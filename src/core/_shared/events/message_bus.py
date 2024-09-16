@@ -13,7 +13,7 @@ from src.core.video.application.events.handlers import (
 from src.core.video.application.events.integration_events import (
     AudioVideoMediaUpdatedIntegrationEvent,
 )
-from src.core.video.domain.events import AudioVideoMediaUpdated
+from src.core.video.domain.events.events import AudioVideoMediaUpdated
 
 logger = logging.getLogger(__name__)
 

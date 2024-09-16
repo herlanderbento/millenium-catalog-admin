@@ -7,15 +7,6 @@ from src.core._shared.application.storage_interface import IStorage
 
 class S3Storage(IStorage):
     def __init__(self) -> None:
-        # Configura o cliente S3 usando credenciais do AWS configuradas no ambiente
-        # self.s3_client = boto3.client(
-        #     's3',
-        #     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        #     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        #     region_name=settings.AWS_REGION
-        # )
-
-        # Configura o cliente R2 usando as credenciais do Cloudflare
         self.s3_client = boto3.client(
             "s3",
             aws_access_key_id=settings.R2_ACCESS_KEY_ID,

@@ -48,20 +48,66 @@ class VideoDjangoRepository(IVideoRepository):
         models = VideoModel.objects.all()
         return [VideoModelMapper.to_entity(model) for model in models]
 
+    # def update(self, entity: Video) -> None:
+    #     model = VideoModel.objects.filter(pk=entity.id.value).update(
+    #         title=entity.title,
+    #         description=entity.description,
+    #         launch_year=entity.launch_year,
+    #         duration=entity.duration,
+    #         rating=entity.rating,
+    #         opened=entity.opened,
+    #         published=entity.published,
+    #         created_at=entity.created_at,
+    #     )
+
+    #     if not model:
+    #         raise NotFoundException(entity.id.value, self.get_entity())
+
+    #     AudioVideoMediaModel.objects.filter(id=entity.id.value).delete()
+
+    #     model.video = (
+    #         AudioVideoMediaModel.objects.create(
+    #             name=entity.video.name,
+    #             raw_location=entity.video.raw_location,
+    #             encoded_location=entity.video.encoded_location,
+    #             status=entity.video.status,
+    #         )
+    #         if entity.video
+    #         else None
+    #     )
+
+    #     categories_set = VideoModel.objects.get(pk=entity.id.value).categories
+    #     categories_set.clear()
+    #     categories_set.add(
+    #         *[category_id.value for category_id in entity.categories_id],
+    #     )
+
+    #     genres_set = VideoModel.objects.get(pk=entity.id.value).genres
+    #     genres_set.clear()
+    #     genres_set.add(
+    #         *[genre_id.value for genre_id in entity.genres_id],
+    #     )
+
+    #     cast_members_set = VideoModel.objects.get(pk=entity.id.value).cast_members
+    #     cast_members_set.clear()
+    #     cast_members_set.add(
+    #         *[cast_member_id.value for cast_member_id in entity.cast_members_id],
+    #     )
+
     def update(self, entity: Video) -> None:
-        model = VideoModel.objects.filter(pk=entity.id.value).update(
-            title=entity.title,
-            description=entity.description,
-            launch_year=entity.launch_year,
-            duration=entity.duration,
-            rating=entity.rating,
-            opened=entity.opened,
-            published=entity.published,
-            created_at=entity.created_at,
-        )
+        model = VideoModel.objects.filter(pk=entity.id.value).first()
 
         if not model:
             raise NotFoundException(entity.id.value, self.get_entity())
+
+        model.title = entity.title
+        model.description = entity.description
+        model.launch_year = entity.launch_year
+        model.duration = entity.duration
+        model.rating = entity.rating
+        model.opened = entity.opened
+        model.published = entity.published
+        model.created_at = entity.created_at
 
         AudioVideoMediaModel.objects.filter(id=model.video_id).delete()
 
@@ -76,23 +122,15 @@ class VideoDjangoRepository(IVideoRepository):
             else None
         )
 
-        categories_set = VideoModel.objects.get(pk=entity.id.value).categories
-        categories_set.clear()
-        categories_set.add(
-            *[category_id.value for category_id in entity.categories_id],
+        model.categories.set(
+            [category_id.value for category_id in entity.categories_id]
+        )
+        model.genres.set([genre_id.value for genre_id in entity.genres_id])
+        model.cast_members.set(
+            [cast_member_id.value for cast_member_id in entity.cast_members_id]
         )
 
-        genres_set = VideoModel.objects.get(pk=entity.id.value).genres
-        genres_set.clear()
-        genres_set.add(
-            *[genre_id.value for genre_id in entity.genres_id],
-        )
-
-        cast_members_set = VideoModel.objects.get(pk=entity.id.value).cast_members
-        cast_members_set.clear()
-        cast_members_set.add(
-            *[cast_member_id.value for cast_member_id in entity.cast_members_id],
-        )
+        model.save()
 
     def delete(self, entity_id: VideoId) -> None:
         VideoModel.objects.filter(id=entity_id).delete()

@@ -33,3 +33,6 @@ class GetVideoInputSerializer(serializers.Serializer):
 
 class DeleteVideoInputSerializer(serializers.Serializer):
     id = serializers.UUIDField()
+
+class UploadVideoInputSerializer(serializers.Serializer):
+    id = serializers.UUIDField()

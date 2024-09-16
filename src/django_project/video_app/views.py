@@ -5,6 +5,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+from src.core._shared.events.message_bus import MessageBus
+from src.core._shared.infra.storage.local_storage import LocalStorage
+from src.core._shared.infra.storage.s3_storage import S3Storage
+from src.core.video.application.use_cases.upload_video import (
+    UploadVideoInput,
+    UploadVideoUseCase,
+)
 from src.core.video.application.use_cases.delete_video import (
     DeleteVideoInput,
     DeleteVideoUseCase,
@@ -37,6 +44,7 @@ from src.django_project.video_app.serializers import (
     CreateVideoInputSerializer,
     DeleteVideoInputSerializer,
     GetVideoInputSerializer,
+    UploadVideoInputSerializer,
 )
 
 
@@ -46,6 +54,9 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         category_repo = CategoryDjangoRepository()
         genre_repo = GenreDjangoRepository()
         cast_member_repo = CastMemberDjangoRepository()
+        storage = S3Storage()
+        message_bus = MessageBus()
+        # local_storage = LocalStorage()
 
         self.create_use_case = CreateVideoUseCase(
             video_repo,
@@ -56,6 +67,11 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         self.get_use_case = GetVideoUseCase(video_repo)
         self.list_use_case = ListVideosUseCase(video_repo)
         self.delete_use_case = DeleteVideoUseCase(video_repo)
+        self.upload_use_case = UploadVideoUseCase(
+            video_repo=video_repo,
+            storage=storage,
+            message_bus=message_bus,
+        )
 
     def create(self, request: Request) -> Response:
         serializer = CreateVideoInputSerializer(data=request.data)
@@ -83,7 +99,7 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
                     genres_id=filters.get("genres_id"),
                     cast_members_id=filters.get("cast_members_id"),
                 )
-            )
+            ),
         )
         output = self.list_use_case.execute(input)
 
@@ -106,6 +122,28 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
 
     def update(self, request: Request, pk: None):
         raise NotImplementedError
+
+    def partial_update(self, request: Request, pk: UUID = None):
+        serializer = UploadVideoInputSerializer(data={"id": pk})
+        serializer.is_valid(raise_exception=True)
+
+        file = request.FILES["video_file"]
+        content = file.read()
+        content_type = file.content_type
+
+        input = UploadVideoInput(
+            **serializer.validated_data,
+            file_name=file.name,
+            content=content,
+            content_type=content_type,
+        )
+
+        output = self.upload_use_case.execute(input)
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=VideoViewSet.serialize(output),
+        )
 
     def destroy(self, request: Request, pk: UUID = None):
         serializer = DeleteVideoInputSerializer(data={"id": pk})

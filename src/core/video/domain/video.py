@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Annotated, Set
 
 from pydantic import Strict
+from src.core.video.domain.events.events import AudioVideoMediaUpdated
 from src.core.cast_member.domain.cast_member import CastMemberId
 from src.core.category.domain.category import CategoryId
 from src.core.genre.domain.genre import GenreId
@@ -11,6 +12,7 @@ from src.core.video.domain.audio_video_media import (
     AudioVideoMedia,
     ImageMedia,
     MediaStatus,
+    MediaType,
     Rating,
 )
 from src.core._shared.domain.entity import AggregateRoot
@@ -125,6 +127,14 @@ class Video(AggregateRoot):
     def replace_video(self, video: AudioVideoMedia):
         self.video = video
         self.validate()
+
+        self.dispatch(
+            AudioVideoMediaUpdated(
+                aggregate_id=self.id.value,
+                file_path=video.raw_location,
+                media_type=MediaType.VIDEO,
+            )
+        )
 
     def sync_categories_id(self, categories_id: Set[CategoryId]):
         self.categories_id = {CategoryId(id_) for id_ in categories_id}

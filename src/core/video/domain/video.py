@@ -4,6 +4,13 @@ from decimal import Decimal
 from typing import Annotated, Set
 
 from pydantic import Strict
+
+
+from src.core._shared.domain.entities.aggregate_roots import AggregateRoots
+from src.core.video.domain.domain_events.video_audio_media_replaced_event import (
+    VideoAudioMediaReplaced,
+)
+from src.core.video.domain.domain_events.video_created_events import VideoCreatedEvent
 from src.core.video.domain.events.events import AudioVideoMediaUpdated
 from src.core.cast_member.domain.cast_member import CastMemberId
 from src.core.category.domain.category import CategoryId
@@ -15,7 +22,6 @@ from src.core.video.domain.audio_video_media import (
     MediaType,
     Rating,
 )
-from src.core._shared.domain.entity import AggregateRoot
 from src.core._shared.domain.value_objects import Uuid
 
 
@@ -37,7 +43,7 @@ class VideoId(Uuid):
 
 
 @dataclass(slots=True, kw_only=True)
-class Video(AggregateRoot):
+class Video(AggregateRoots):
     id: VideoId = field(default_factory=VideoId)
     title: str
     description: str
@@ -74,6 +80,17 @@ class Video(AggregateRoot):
             cast_members_id=props.cast_members_id,
             published=False,
         )
+        video.apply_event(VideoCreatedEvent(video))
+        
+        # video.register_handler(
+        #     VideoCreatedEvent.__name__,
+        #     video.on_video_created,
+        # )
+        # video.register_handler(
+        #     VideoAudioMediaReplaced.__name__,
+        #     video.on_audio_video_media_replaced,
+        # )
+
         return video
 
     @property
@@ -128,13 +145,13 @@ class Video(AggregateRoot):
         self.video = video
         self.validate()
 
-        self.dispatch(
-            AudioVideoMediaUpdated(
-                aggregate_id=self.id.value,
-                file_path=video.raw_location,
-                media_type=MediaType.VIDEO,
-            )
-        )
+        # self.dispatch(
+        #     AudioVideoMediaUpdated(
+        #         aggregate_id=self.id.value,
+        #         file_path=video.raw_location,
+        #         media_type=MediaType.VIDEO,
+        #     )
+        # )
 
     def sync_categories_id(self, categories_id: Set[CategoryId]):
         self.categories_id = {CategoryId(id_) for id_ in categories_id}
@@ -151,13 +168,13 @@ class Video(AggregateRoot):
     def process(self, status: MediaStatus, encoded_location: str = "") -> None:
         if status == MediaStatus.COMPLETED:
             self.video = self.video.complete(encoded_location)
-            self.published()
+            self.try_mark_as_published()
         else:
             self.video = self.video.fail()
 
         self.validate()
 
-    def published(self):
+    def try_mark_as_published(self):
         if (
             self.trailer
             and self.video
@@ -165,6 +182,17 @@ class Video(AggregateRoot):
             and self.video.status == MediaStatus.COMPLETED
         ):
             self.published = True
+
+    # def on_video_created(self, _event: VideoCreatedEvent):
+    #     print(f"VideoCreatedEvent {_event.title}")
+    #     if self.published:
+    #         return
+    #     self.try_mark_as_published()
+
+    # def on_audio_video_media_replaced(self, _event: VideoAudioMediaReplaced):
+    #     if self.published:
+    #         return 
+    #     self.try_mark_as_published()
 
     def validate(self):
         self._validate(

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from src.core._shared.domain.repository.unit_of_work_interface import IUnitOfWork
 from src.core.video.domain.video import Video
 from src.core._shared.domain.exceptions import RelatedNotFoundException
 from src.core._shared.application.use_cases import UseCase
@@ -35,11 +36,13 @@ class CreateVideoOutput(VideoOutput):
 class CreateVideoUseCase(UseCase):
     def __init__(
         self,
+        uow: IUnitOfWork,
         video_repo: IVideoRepository,
         category_repo: ICategoryRepository,
         genre_repo: IGenreRepository,
         cast_member_repo: ICastMemberRepository,
     ):
+        self.uow = uow
         self.video_repo = video_repo
         self.category_repo = category_repo
         self.genre_repo = genre_repo
@@ -51,9 +54,9 @@ class CreateVideoUseCase(UseCase):
         self.__validate_cast_members(input.cast_members_id)
 
         video = Video.create(input)
-
-        self.video_repo.insert(video)
-
+        
+        self.uow.do(lambda uow: self.video_repo.insert(video))
+        
         return self.__to_output(video)
 
     def __validate_categories(self, categories_id: set[CategoryId]):

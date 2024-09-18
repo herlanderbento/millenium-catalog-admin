@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import UUID
 from pathlib import Path
 
+from src.core._shared.application.application_service import ApplicationService
 from src.core.video.application.events.integration_events import (
     AudioVideoMediaUpdatedIntegrationEvent,
 )
@@ -42,11 +43,13 @@ class UploadAudioVideoMediaUseCase(UseCase):
         self,
         video_repo: IVideoRepository,
         storage: IStorage,
-        message_bus: MessageBus,
+        app_service: ApplicationService,
+        # message_bus: MessageBus,
     ):
         self.video_repo = video_repo
         self.storage = storage
-        self.message_bus = message_bus
+        # self.message_bus = message_bus
+        self.app_service = app_service
 
     def execute(self, input: UploadAudioVideoMediaInput) -> UploadAudioVideoMediaOutput:
         video = self.video_repo.find_by_id(input.id)
@@ -81,17 +84,21 @@ class UploadAudioVideoMediaUseCase(UseCase):
             input.content,
             input.content_type,
         )
-
-        self.video_repo.update(video)
-
-        self.message_bus.handle(
-            [
-                AudioVideoMediaUpdatedIntegrationEvent(
-                    resource_id=f"{input.id}.{MediaType.VIDEO}",
-                    file_path=str(file_path),
-                ),
-            ]
+        
+        self.app_service.run(
+            lambda: self.video_repo.update(video),
         )
+
+        # self.video_repo.update(video)
+
+        # self.message_bus.handle(
+        #     [
+        #         AudioVideoMediaUpdatedIntegrationEvent(
+        #             resource_id=f"{input.id}.{MediaType.VIDEO}",
+        #             file_path=str(file_path),
+        #         ),
+        #     ]
+        # )
 
         return self.__to_output(video)
 

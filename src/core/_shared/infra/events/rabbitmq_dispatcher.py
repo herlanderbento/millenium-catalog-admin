@@ -1,13 +1,11 @@
 import json
 
-from dotenv import load_dotenv
 import pika
 
 from src.core._shared.events.event import Event
 from src.core._shared.events.event_dispatcher import EventDispatcher
 
 
-load_dotenv()
 class RabbitMQDispatcher(EventDispatcher):
     def __init__(self, host="localhost", queue="videos.new"):
         self.host = host

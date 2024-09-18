@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 
+from src.core._shared.application.application_service import ApplicationService
+from src.core._shared.domain.events.domain_event_mediator import DomainEventMediator
+from src.core._shared.domain.repository.unit_of_work_interface import IUnitOfWork
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
     UploadImageMediaUseCase,
@@ -39,6 +42,7 @@ from src.django_project.shared_app.filter_extractor import FilterExtractor
 from src.django_project.cast_member_app.repository import CastMemberDjangoRepository
 from src.django_project.category_app.repository import CategoryDjangoRepository
 from src.django_project.genre_app.repository import GenreDjangoRepository
+from src.django_project.shared_app.unit_of_work_django import UnitOfWork
 from src.django_project.video_app.presenters import (
     VideoCollectionPresenter,
     VideoPresenter,
@@ -61,9 +65,14 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         cast_member_repo = CastMemberDjangoRepository()
         storage = S3Storage()
         message_bus = MessageBus()
-        # local_storage = LocalStorage()
+        uow = UnitOfWork()
+        app_service = ApplicationService(
+            uow=uow, domain_event_mediator=DomainEventMediator()
+        )
+        local_storage = LocalStorage()
 
         self.create_use_case = CreateVideoUseCase(
+            uow,
             video_repo,
             category_repo,
             genre_repo,
@@ -74,8 +83,8 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         self.delete_use_case = DeleteVideoUseCase(video_repo)
         self.upload_audio_video_media = UploadAudioVideoMediaUseCase(
             video_repo=video_repo,
-            storage=storage,
-            message_bus=message_bus,
+            storage=local_storage,
+            app_service=app_service,
         )
 
         self.upload_image_media = UploadImageMediaUseCase(video_repo, storage)

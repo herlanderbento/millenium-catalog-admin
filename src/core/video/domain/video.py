@@ -81,15 +81,6 @@ class Video(AggregateRoots):
             published=False,
         )
         video.apply_event(VideoCreatedEvent(video))
-        
-        # video.register_handler(
-        #     VideoCreatedEvent.__name__,
-        #     video.on_video_created,
-        # )
-        # video.register_handler(
-        #     VideoAudioMediaReplaced.__name__,
-        #     video.on_audio_video_media_replaced,
-        # )
 
         return video
 
@@ -139,19 +130,23 @@ class Video(AggregateRoots):
 
     def replace_trailer(self, trailer: AudioVideoMedia):
         self.trailer = trailer
-        self.validate()
+        # self.apply_event(
+        #     VideoAudioMediaReplaced(
+        #         aggregate_id=self.id,
+        #         media_type="trailer",
+        #         media=trailer,
+        #     )
+        # )
 
     def replace_video(self, video: AudioVideoMedia):
         self.video = video
-        self.validate()
-
-        # self.dispatch(
-        #     AudioVideoMediaUpdated(
-        #         aggregate_id=self.id.value,
-        #         file_path=video.raw_location,
-        #         media_type=MediaType.VIDEO,
-        #     )
-        # )
+        self.apply_event(
+            VideoAudioMediaReplaced(
+                aggregate_id=str(self.id),
+                media_type="video",
+                media=video,
+            )
+        )
 
     def sync_categories_id(self, categories_id: Set[CategoryId]):
         self.categories_id = {CategoryId(id_) for id_ in categories_id}

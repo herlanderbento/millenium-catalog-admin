@@ -8,6 +8,9 @@ from rest_framework.decorators import action
 from src.core._shared.application.application_service import ApplicationService
 from src.core._shared.domain.events.domain_event_mediator import DomainEventMediator
 from src.core._shared.domain.repository.unit_of_work_interface import IUnitOfWork
+from src.core._shared.infra.message_broker.rabbitmq_message_broker import (
+    RabbitMQMessageBroker,
+)
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
     UploadImageMediaUseCase,
@@ -66,8 +69,11 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         storage = S3Storage()
         message_bus = MessageBus()
         uow = UnitOfWork()
+        message_broker = RabbitMQMessageBroker(queue="videos.new")
         app_service = ApplicationService(
-            uow=uow, domain_event_mediator=DomainEventMediator()
+            uow=uow,
+            domain_event_mediator=DomainEventMediator(),
+            message_broker=message_broker,
         )
         local_storage = LocalStorage()
 
@@ -153,7 +159,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
             )
 
         file = field
-        print(f"Uploading video {file}")
 
         input = UploadAudioVideoMediaInput(
             **serializer.validated_data,

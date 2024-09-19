@@ -1,4 +1,4 @@
-
+from django.dispatch import receiver
 
 from src.core._shared.application.domain_event_handler_interface import IIntegrationEventHandler
 from src.core._shared.application.message_broker_interface import IMessageBroker
@@ -11,6 +11,7 @@ class PublishVideoMediaReplacedInQueueHandler(IIntegrationEventHandler):
       print(f"message_broker {message_broker}")
         # self.message_broker = message_broker
         
+    @receiver(VideoAudioMediaUploadedIntegrationEvent.__name__)
     def handle(self, event: VideoAudioMediaUploadedIntegrationEvent) -> None:
         # Publish event to video media replaced in queue queue
-        pass
+        pass  

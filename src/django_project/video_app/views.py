@@ -5,11 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 
+from src.core._shared.application.application_service import ApplicationService
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
     UploadImageMediaUseCase,
 )
-from src.core._shared.events.message_bus import MessageBus
+from src.core._shared.domain.events.domain_event_mediator import DomainEventMediator
 from src.core._shared.infra.storage.local_storage import LocalStorage
 from src.core._shared.infra.storage.s3_storage import S3Storage
 from src.core.video.application.use_cases.upload_audio_video_media import (
@@ -39,6 +40,7 @@ from src.django_project.shared_app.filter_extractor import FilterExtractor
 from src.django_project.cast_member_app.repository import CastMemberDjangoRepository
 from src.django_project.category_app.repository import CategoryDjangoRepository
 from src.django_project.genre_app.repository import GenreDjangoRepository
+from src.django_project.shared_app.unit_of_work import UnitOfWork
 from src.django_project.video_app.presenters import (
     VideoCollectionPresenter,
     VideoPresenter,
@@ -60,8 +62,13 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         genre_repo = GenreDjangoRepository()
         cast_member_repo = CastMemberDjangoRepository()
         storage = S3Storage()
-        message_bus = MessageBus()
         # local_storage = LocalStorage()
+        uow = UnitOfWork()
+
+        app_service = ApplicationService(
+            uow=uow,
+            domain_event_mediator=DomainEventMediator(),
+        )
 
         self.create_use_case = CreateVideoUseCase(
             video_repo,
@@ -75,7 +82,7 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         self.upload_audio_video_media = UploadAudioVideoMediaUseCase(
             video_repo=video_repo,
             storage=storage,
-            message_bus=message_bus,
+            app_service=app_service,
         )
 
         self.upload_image_media = UploadImageMediaUseCase(video_repo, storage)
@@ -144,7 +151,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
             )
 
         file = field
-        print(f"Uploading video {file}")
 
         input = UploadAudioVideoMediaInput(
             **serializer.validated_data,
@@ -173,8 +179,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         }
 
         field = next(
-            # (key for field_name, key in file_fields.items() if key in request.FILES),
-            # None,
             (field for field, key in file_fields.items() if key in request.FILES),
             None,
         )

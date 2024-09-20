@@ -3,10 +3,11 @@ from typing import Literal
 from uuid import UUID
 from pathlib import Path
 
-from src.core.video.application.events.integration_events import (
-    AudioVideoMediaUpdatedIntegrationEvent,
+from src.core._shared.application.application_service import ApplicationService
+from src.core.video.domain.domain_events.video_audio_media_uploaded_integration import (
+    VideoAudioMediaUploadedIntegrationEvent,
 )
-from src.core._shared.events.message_bus import MessageBus
+from src.core._shared.domain.events.domain_event_mediator import DomainEventMediator
 from src.core._shared.application.storage_interface import IStorage
 from src.core._shared.application.use_cases import UseCase
 from src.core._shared.domain.exceptions import (
@@ -42,11 +43,15 @@ class UploadAudioVideoMediaUseCase(UseCase):
         self,
         video_repo: IVideoRepository,
         storage: IStorage,
-        message_bus: MessageBus,
+        # message_bus: DomainEventMediator,
+        app_service: ApplicationService,
+
     ):
         self.video_repo = video_repo
         self.storage = storage
-        self.message_bus = message_bus
+        # self.message_bus = message_bus
+        self.app_service = app_service
+
 
     def execute(self, input: UploadAudioVideoMediaInput) -> UploadAudioVideoMediaOutput:
         video = self.video_repo.find_by_id(input.id)
@@ -76,22 +81,28 @@ class UploadAudioVideoMediaUseCase(UseCase):
 
         replace_function(media)
 
-        self.storage.store(
-            file_path,
-            input.content,
-            input.content_type,
+        # self.storage.store(
+        #     file_path,
+        #     input.content,
+        #     input.content_type,
+        # )
+        
+        self.app_service.run(
+            lambda: self.video_repo.update(video),
         )
+        
+        print(video.events)
 
-        self.video_repo.update(video)
+        # self.video_repo.update(video)
 
-        self.message_bus.handle(
-            [
-                AudioVideoMediaUpdatedIntegrationEvent(
-                    resource_id=f"{input.id}.{MediaType.VIDEO}",
-                    file_path=str(file_path),
-                ),
-            ]
-        )
+        # self.message_bus.handle(
+        #     [
+        #         VideoAudioMediaUploadedIntegrationEvent(
+        #             resource_id=f"{input.id}.{MediaType.VIDEO}",
+        #             file_path=str(file_path),
+        #         ),
+        #     ]
+        # )
 
         return self.__to_output(video)
 

@@ -62,7 +62,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         genre_repo = GenreDjangoRepository()
         cast_member_repo = CastMemberDjangoRepository()
         storage = S3Storage()
-        message_bus = DomainEventMediator()
         # local_storage = LocalStorage()
         uow = UnitOfWork()
 
@@ -180,8 +179,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         }
 
         field = next(
-            # (key for field_name, key in file_fields.items() if key in request.FILES),
-            # None,
             (field for field, key in file_fields.items() if key in request.FILES),
             None,
         )

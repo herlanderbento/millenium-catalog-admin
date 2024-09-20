@@ -16,8 +16,33 @@ from src.core.video.domain.domain_events.video_created_event import VideoCreated
 logger = logging.getLogger(__name__)
 
 
+# class DomainEventMediator(IIntegrationEvent):
+#     def __init__(self):
+#         self.handlers: dict[Type[TDomainEvent], List[Handler[TDomainEvent]]] = {
+#             VideoAudioMediaUploadedIntegrationEvent: [
+#                 PublishVideoMediaReplacedInQueueHandler(
+#                     message_broker=RabbitMQMessageBroker(queue="videos.new")
+#                 ),
+#             ],
+#             VideoCreatedEvent: [
+#                 DummyHandler(),
+#             ],
+#         }
+
+#     def handle(self, events: list[IDomainEvent]) -> None:
+#         for event in events:
+#             for handler in self.handlers[type(event)]:
+#                 try:
+#                     handler.handle(event)
+#                 except Exception:
+#                     logger.exception("Exception handling event %s", event)
+#                     continue
+
+
+
 class DomainEventMediator(IIntegrationEvent):
     def __init__(self):
+        # Associa o evento de integração ao handler que deve processá-lo
         self.handlers: dict[Type[TDomainEvent], List[Handler[TDomainEvent]]] = {
             VideoAudioMediaUploadedIntegrationEvent: [
                 PublishVideoMediaReplacedInQueueHandler(
@@ -25,66 +50,37 @@ class DomainEventMediator(IIntegrationEvent):
                 ),
             ],
             VideoCreatedEvent: [
-                DummyHandler(),
+                DummyHandler(),  # Handler vazio ou qualquer outro necessário
             ],
         }
 
     def handle(self, events: list[IDomainEvent]) -> None:
         for event in events:
-            for handler in self.handlers[type(event)]:
-                try:
-                    handler.handle(event)
-                except Exception:
-                    logger.exception("Exception handling event %s", event)
-                    continue
+            event_type = type(event)
 
+            if event_type == VideoCreatedEvent:
+                integration_event = VideoAudioMediaUploadedIntegrationEvent(
+                    resource_id=f"{event.aggregate_id}.{event.media_type}",
+                    file_path=event.file_path
+                )
 
+                self._handle_integration_event(integration_event)
+            else:
+                self._handle_event(event)
 
-# class DomainEventMediator(IIntegrationEvent):
-#     def __init__(self):
-#         # Associa o evento de integração ao handler que deve processá-lo
-#         self.handlers: dict[Type[IDomainEvent], List[Handler[IDomainEvent]]] = {
-#             VideoAudioMediaUploadedIntegrationEvent: [
-#                 PublishVideoMediaReplacedInQueueHandler(
-#                     message_broker=RabbitMQMessageBroker(queue="videos.new")
-#                 ),
-#             ],
-#             VideoCreatedEvent: [
-#                 DummyHandler(),  # Handler vazio ou qualquer outro necessário
-#             ],
-#         }
+    def _handle_event(self, event: IDomainEvent) -> None:
+        event_type = type(event)
+        for handler in self.handlers.get(event_type, []):
+            try:
+                handler.handle(event)
+            except Exception:
+                logger.exception("Exception handling event %s", event)
+                continue
 
-#     def handle(self, events: list[IDomainEvent]) -> None:
-#         for event in events:
-#             event_type = type(event)
-
-#             if event_type == VideoCreatedEvent:
-#                 # Converte VideoCreatedEvent para VideoAudioMediaUploadedIntegrationEvent
-#                 integration_event = VideoAudioMediaUploadedIntegrationEvent(
-#                     resource_id=f"{event.aggregate_id}.{event.media_type}",
-#                     file_path=event.file_path
-#                 )
-
-#                 # Repassa o novo evento de integração para ser processado
-#                 self._handle_integration_event(integration_event)
-#             else:
-#                 # Processa eventos regulares
-#                 self._handle_event(event)
-
-#     def _handle_event(self, event: IDomainEvent) -> None:
-#         event_type = type(event)
-#         for handler in self.handlers.get(event_type, []):
-#             try:
-#                 handler.handle(event)
-#             except Exception:
-#                 logger.exception("Exception handling event %s", event)
-#                 continue
-
-#     def _handle_integration_event(self, integration_event: VideoAudioMediaUploadedIntegrationEvent) -> None:
-#         # Publica o evento de integração no handler correspondente
-#         for handler in self.handlers.get(type(integration_event), []):
-#             try:
-#                 handler.handle(integration_event)
-#             except Exception:
-#                 logger.exception("Exception handling integration event %s", integration_event)
-#                 continue
+    def _handle_integration_event(self, integration_event: VideoAudioMediaUploadedIntegrationEvent) -> None:
+        for handler in self.handlers.get(type(integration_event), []):
+            try:
+                handler.handle(integration_event)
+            except Exception:
+                logger.exception("Exception handling integration event %s", integration_event)
+                continue

@@ -65,7 +65,7 @@ class UploadAudioVideoMediaUseCase(UseCase):
         if media_type is None:
             raise EntityValidationException(f"Invalid field value: {input.field}")
 
-        media = AudioVideoMedia(
+        media = AudioVideoMedia.create(
             name=input.file_name,
             raw_location=str(file_path),
             encoded_location="",

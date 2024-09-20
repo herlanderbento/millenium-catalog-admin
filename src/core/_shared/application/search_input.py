@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Generic, TypeVar, TypedDict
 
-from src.core._shared.domain.search_params import SortDirection, SortDirectionValues
+from src.core._shared.domain.repositories.search_params import SortDirection, SortDirectionValues
 
 
 Filter = TypeVar("Filter", bound=str)

@@ -1,7 +1,7 @@
 from typing import List, Set
 from django.core.paginator import Paginator
 
-from src.core._shared.domain.search_params import SortDirection
+from src.core._shared.domain.repositories.search_params import SortDirection
 from src.core._shared.domain.exceptions import NotFoundException
 from src.django_project.category_app.mappers import CategoryModelMapper
 from src.core.category.domain.category import Category, CategoryId

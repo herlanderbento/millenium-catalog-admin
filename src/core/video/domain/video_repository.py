@@ -2,9 +2,9 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import Set
 
-from src.core._shared.domain.repository_interface import ISearchableRepository
-from src.core._shared.domain.search_params import SearchParams
-from src.core._shared.domain.search_result import SearchResult
+from src.core._shared.domain.repositories.repository_interface import ISearchableRepository
+from src.core._shared.domain.repositories.search_params import SearchParams
+from src.core._shared.domain.repositories.search_result import SearchResult
 from src.core.video.domain.video import Video, VideoId
 from src.core.category.domain.category import CategoryId
 from src.core.cast_member.domain.cast_member import CastMemberId

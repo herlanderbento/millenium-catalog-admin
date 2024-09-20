@@ -1,5 +1,5 @@
 from typing import List, Set, Type
-from src.core._shared.domain.search_params import SortDirection
+from src.core._shared.domain.repositories.search_params import SortDirection
 from src.core._shared.infra.db.in_memory.in_memory_searchable_repository import (
     InMemorySearchableRepository,
 )

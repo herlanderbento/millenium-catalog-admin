@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Generic, List, TypeVar
 
-from src.core._shared.domain.search_result import SearchResult
+from src.core._shared.domain.repositories.search_result import SearchResult
 
 
 PaginationOutputItem = TypeVar("PaginationOutputItem")

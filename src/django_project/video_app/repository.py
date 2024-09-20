@@ -4,7 +4,7 @@ import uuid
 from django.core.paginator import Paginator
 from django.db import models
 
-from src.core._shared.domain.search_params import SortDirection
+from src.core._shared.domain.repositories.search_params import SortDirection
 from src.core._shared.domain.exceptions import NotFoundException
 from src.core.video.domain.video import Video, VideoId
 from src.core.video.domain.video_repository import (

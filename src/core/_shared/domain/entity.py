@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 from dataclasses import dataclass, field
-from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from src.core._shared.domain.events.domain_event_interface import (
     IDomainEvent,
@@ -9,7 +9,7 @@ from src.core._shared.domain.events.domain_event_interface import (
 )
 from src.core._shared.domain.events.domain_event_mediator import DomainEventMediator
 from src.core._shared.domain.value_objects import ValueObject
-from src.core._shared.domain.notification import Notification
+from src.core._shared.domain.validators.notification import Notification
 
 
 @dataclass(slots=True)

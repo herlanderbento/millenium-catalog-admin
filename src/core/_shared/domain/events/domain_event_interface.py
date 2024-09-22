@@ -1,10 +1,17 @@
-from abc import ABC
-from dataclasses import dataclass, asdict
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
 from typing import TypeVar
 
 
 @dataclass(frozen=True, kw_only=True)
-class Event(ABC):
+class IIntegrationEvent(ABC):
+    @abstractmethod
+    def handle(self, events: list['IDomainEvent']) -> None:
+        pass
+    
+
+@dataclass(frozen=True, kw_only=True)
+class IDomainEvent(ABC):
     @property
     def type(self) -> str:
         return self.__class__.__name__
@@ -20,4 +27,4 @@ class Event(ABC):
         return self.__str__()
 
 
-TEvent = TypeVar("TEvent", bound=Event)
+TDomainEvent = TypeVar("TDomainEvent", bound=IDomainEvent)

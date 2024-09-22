@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Any, List, Optional
 
 from src.core._shared.domain.value_objects import Uuid
-from src.core._shared.domain.search_params import SearchParams, SortDirection
-from src.core._shared.domain.search_result import SearchResult
+from src.core._shared.domain.repositories.search_params import SearchParams, SortDirection
+from src.core._shared.domain.repositories.search_result import SearchResult
 from src.core._shared.infra.db.in_memory.in_memory_searchable_repository import (
     InMemorySearchableRepository,
 )

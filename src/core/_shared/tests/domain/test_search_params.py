@@ -1,4 +1,4 @@
-from src.core._shared.domain.search_result import SearchResult
+from src.core._shared.domain.repositories.search_result import SearchResult
 
 
 class TestSearchResult:

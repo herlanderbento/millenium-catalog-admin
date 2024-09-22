@@ -1,16 +1,12 @@
 import json
 
-from dotenv import load_dotenv
 import pika
 
-from src.core._shared.events.event import Event
-from src.core._shared.events.event_dispatcher import EventDispatcher
+from src.core._shared.application.message_broker import IMessageBrokerProducer
+from src.core._shared.domain.events.domain_event_interface import IDomainEvent
 
 
-load_dotenv()
-
-
-class RabbitMQDispatcher(EventDispatcher):
+class RabbitMQMessageBroker(IMessageBrokerProducer):
     def __init__(self, host="localhost", queue="videos.new"):
         self.host = host
         self.queue = queue
@@ -18,7 +14,7 @@ class RabbitMQDispatcher(EventDispatcher):
         self.channel = None
         self.credentials = pika.PlainCredentials("admin", "admin")
 
-    def dispatch(self, event: Event) -> None:
+    def publish_event(self, event: IDomainEvent) -> None:
         if not self.connection:
             self.connection = pika.BlockingConnection(
                 pika.ConnectionParameters(

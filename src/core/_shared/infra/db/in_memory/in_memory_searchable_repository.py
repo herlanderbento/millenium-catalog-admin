@@ -4,9 +4,9 @@ from typing import Generic, List, TypeVar
 
 from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.entity import AggregateRoot
-from src.core._shared.domain.search_result import SearchResult
-from src.core._shared.domain.search_params import SearchParams, SortDirection
-from src.core._shared.domain.repository_interface import ISearchableRepository
+from src.core._shared.domain.repositories.search_result import SearchResult
+from src.core._shared.domain.repositories.search_params import SearchParams, SortDirection
+from src.core._shared.domain.repositories.repository_interface import ISearchableRepository
 from src.core._shared.infra.db.in_memory.in_memory_repository import InMemoryRepository
 
 E = TypeVar("E", bound=AggregateRoot)

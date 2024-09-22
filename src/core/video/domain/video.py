@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Annotated, Set
 
 from pydantic import Strict
-from src.core.video.domain.events.events import AudioVideoMediaUpdated
+from src.core.video.domain.domain_events.video_created_event import VideoCreatedEvent
 from src.core.cast_member.domain.cast_member import CastMemberId
 from src.core.category.domain.category import CategoryId
 from src.core.genre.domain.genre import GenreId
@@ -122,14 +122,19 @@ class Video(AggregateRoot):
 
     def replace_trailer(self, trailer: AudioVideoMedia):
         self.trailer = trailer
-        self.validate()
+        self.applyEvent(
+            VideoCreatedEvent(
+                aggregate_id=self.id.value,
+                file_path=trailer.raw_location,
+                media_type=MediaType.VIDEO,
+            )
+        )
 
     def replace_video(self, video: AudioVideoMedia):
         self.video = video
-        self.validate()
 
-        self.dispatch(
-            AudioVideoMediaUpdated(
+        self.applyEvent(
+            VideoCreatedEvent(
                 aggregate_id=self.id.value,
                 file_path=video.raw_location,
                 media_type=MediaType.VIDEO,

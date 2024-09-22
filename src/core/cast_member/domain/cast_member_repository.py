@@ -2,9 +2,9 @@ from abc import ABC
 from dataclasses import dataclass, field
 
 from src.core.cast_member.domain.cast_member_type import CastMemberType
-from src.core._shared.domain.repository_interface import ISearchableRepository
-from src.core._shared.domain.search_result import SearchResult
-from src.core._shared.domain.search_params import SearchParams
+from src.core._shared.domain.repositories.repository_interface import ISearchableRepository
+from src.core._shared.domain.repositories.search_result import SearchResult
+from src.core._shared.domain.repositories.search_params import SearchParams
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberId
 
 

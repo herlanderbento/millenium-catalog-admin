@@ -4,7 +4,7 @@ from typing import Dict, List, Set, Type, TypeVar
 from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.exceptions import NotFoundException
 from src.core._shared.domain.entity import Entity
-from src.core._shared.domain.repository_interface import IRepository
+from src.core._shared.domain.repositories.repository_interface import IRepository
 
 E = TypeVar("E", bound=Entity)
 EntityId = TypeVar("EntityId", bound=ValueObject)

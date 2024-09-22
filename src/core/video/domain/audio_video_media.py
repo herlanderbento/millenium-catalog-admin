@@ -1,5 +1,10 @@
 from dataclasses import dataclass
 from enum import StrEnum, unique
+import hashlib
+import random
+import time
+
+from src.core._shared.domain.validators.media_fila_validator import MediaFileValidator
 
 
 @unique
@@ -43,6 +48,27 @@ class AudioVideoMedia:
     encoded_location: str
     status: MediaStatus
     media_type: MediaType
+
+    @staticmethod
+    def create(name, raw_location, encoded_location, status, media_type):
+        new_name = AudioVideoMedia.generate_random_name(
+            raw_name=name
+        )
+        return AudioVideoMedia(
+            name=new_name,
+            raw_location=raw_location,
+            encoded_location=encoded_location,
+            status=status,
+            media_type=media_type,
+        )
+
+    @staticmethod  # Torna o método estático
+    def generate_random_name(raw_name: str) -> str:
+        extension = raw_name.split(".")[-1]
+        random_data = raw_name + str(random.random()) + str(time.time())
+        hashed_name = hashlib.sha256(random_data.encode()).hexdigest()
+
+        return f"{hashed_name}.{extension}"
 
     def complete(self, encoded_location: str):
         return AudioVideoMedia(

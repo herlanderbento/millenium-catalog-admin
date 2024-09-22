@@ -4,11 +4,8 @@ from django.core.paginator import Paginator
 from django.db import models, transaction
 
 from src.core._shared.domain.value_objects import InvalidUuidException
-from src.core._shared.domain.search_params import SortDirection
-from src.core._shared.domain.exceptions import (
-    InvalidArgumentException,
-    NotFoundException,
-)
+from src.core._shared.domain.repositories.search_params import SortDirection
+from src.core._shared.domain.exceptions import NotFoundException
 from src.core.genre.domain.genre import GenreId
 from src.core.genre.domain.genre import Genre
 from src.core.genre.domain.genre_repository import (

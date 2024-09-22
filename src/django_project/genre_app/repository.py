@@ -1,11 +1,14 @@
-from typing import List, Set
+from typing import Dict, List, Set
 import uuid
 from django.core.paginator import Paginator
 from django.db import models, transaction
 
 from src.core._shared.domain.value_objects import InvalidUuidException
 from src.core._shared.domain.search_params import SortDirection
-from src.core._shared.domain.exceptions import NotFoundException
+from src.core._shared.domain.exceptions import (
+    InvalidArgumentException,
+    NotFoundException,
+)
 from src.core.genre.domain.genre import GenreId
 from src.core.genre.domain.genre import Genre
 from src.core.genre.domain.genre_repository import (
@@ -52,6 +55,25 @@ class GenreDjangoRepository(IGenreRepository):
                 self._prefetch_categories()
             ).all()
         ]
+
+    def exists_by_id(self, entity_ids: List[GenreId]) -> Dict[str, List[GenreId]]:
+        if not entity_ids:
+            raise InvalidArgumentException(
+                "ids must be an array with at least one element"
+            )
+
+        exists_genre_models = GenreModel.objects.filter(id__in=entity_ids).values_list(
+            "id", flat=True
+        )
+
+        exists_genre_ids = list(exists_genre_models)
+
+        not_exists_genre_ids = [id for id in entity_ids if id not in exists_genre_ids]
+
+        return {
+            "exists": exists_genre_ids,
+            "not_exists": not_exists_genre_ids,
+        }
 
     def update(self, entity: Genre) -> None:
         affected_rows = GenreModel.objects.filter(pk=entity.id.value).update(

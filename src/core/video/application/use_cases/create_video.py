@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from src.core.category.application.validations.categories_ids_exists_in_database_validator import (
+    CategoriesIdExistsInDatabaseValidator,
+)
 from src.core.video.domain.video import Video
 from src.core._shared.domain.exceptions import RelatedNotFoundException
 from src.core._shared.application.use_cases import UseCase
@@ -15,7 +18,7 @@ from src.core.video.domain.audio_video_media import Rating
 from src.core.video.domain.video_repository import IVideoRepository
 
 
-@dataclass()
+@dataclass
 class CreateVideoInput:
     title: str
     description: str
@@ -27,7 +30,8 @@ class CreateVideoInput:
     genres_id: set[GenreId]
     cast_members_id: set[CastMemberId]
 
-@dataclass()
+
+@dataclass
 class CreateVideoOutput(VideoOutput):
     pass
 
@@ -36,19 +40,23 @@ class CreateVideoUseCase(UseCase):
     def __init__(
         self,
         video_repo: IVideoRepository,
-        category_repo: ICategoryRepository,
+        categories_id_validator: CategoriesIdExistsInDatabaseValidator,
+        # category_repo: ICategoryRepository,
         genre_repo: IGenreRepository,
         cast_member_repo: ICastMemberRepository,
     ):
         self.video_repo = video_repo
-        self.category_repo = category_repo
+        self.categories_id_validator = categories_id_validator
+        # self.category_repo = category_repo
         self.genre_repo = genre_repo
         self.cast_member_repo = cast_member_repo
 
     def execute(self, input: CreateVideoInput) -> CreateVideoOutput:
-        self.__validate_categories(input.categories_id)
+        # self.__validate_categories(input.categories_id)
         self.__validate_genres(input.genres_id)
         self.__validate_cast_members(input.cast_members_id)
+
+        self.categories_id_validator.validate(input.categories_id)
 
         video = Video.create(input)
 
@@ -56,14 +64,14 @@ class CreateVideoUseCase(UseCase):
 
         return self.__to_output(video)
 
-    def __validate_categories(self, categories_id: set[CategoryId]):
-        categories_ids = {
-            category.id for category in self.category_repo.find_by_ids(categories_id)
-        }
-        if len(categories_ids) != len(categories_id):
-            raise RelatedNotFoundException(
-                f"Categories with provided IDs not found: {categories_id - categories_ids}"
-            )
+    # def __validate_categories(self, categories_id: set[CategoryId]):
+    #     categories_ids = {
+    #         category.id for category in self.category_repo.find_by_ids(categories_id)
+    #     }
+    #     if len(categories_ids) != len(categories_id):
+    #         raise RelatedNotFoundException(
+    #             f"Categories with provided IDs not found: {categories_id - categories_ids}"
+    #         )
 
     def __validate_genres(self, genres_id: set[GenreId]):
         genres_ids = {genre.id for genre in self.genre_repo.find_by_ids(genres_id)}

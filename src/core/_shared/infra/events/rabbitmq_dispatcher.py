@@ -8,6 +8,8 @@ from src.core._shared.events.event_dispatcher import EventDispatcher
 
 
 load_dotenv()
+
+
 class RabbitMQDispatcher(EventDispatcher):
     def __init__(self, host="localhost", queue="videos.new"):
         self.host = host
@@ -19,7 +21,10 @@ class RabbitMQDispatcher(EventDispatcher):
     def dispatch(self, event: Event) -> None:
         if not self.connection:
             self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=self.host, credentials=self.credentials)
+                pika.ConnectionParameters(
+                    host=self.host,
+                    credentials=self.credentials,
+                )
             )
             self.channel = self.connection.channel()
             self.channel.queue_declare(queue=self.queue)

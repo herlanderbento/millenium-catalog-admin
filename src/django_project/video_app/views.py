@@ -15,6 +15,10 @@ from src.core.category.application.validations.categories_ids_exists_in_database
 from src.core.genre.application.validations.genres_ids_exists_in_database_validator import (
     GenresIdExistsInDatabaseValidator,
 )
+from src.core.video.application.use_cases.update_video import (
+    UpdateVideoInput,
+    UpdateVideoUseCase,
+)
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
     UploadImageMediaUseCase,
@@ -59,6 +63,7 @@ from src.django_project.video_app.serializers import (
     CreateVideoInputSerializer,
     DeleteVideoInputSerializer,
     GetVideoInputSerializer,
+    UpdateVideoInputSerializer,
     UploadAudioVideoMediaInputSerializer,
     UploadImageMediaInputSerializer,
 )
@@ -96,6 +101,12 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         self.get_use_case = GetVideoUseCase(video_repo)
         self.list_use_case = ListVideosUseCase(video_repo)
         self.delete_use_case = DeleteVideoUseCase(video_repo)
+        self.update_use_case = UpdateVideoUseCase(
+            video_repo,
+            categories_id_validator,
+            genres_id_validator,
+            cast_members_id_validator,
+        )
         self.upload_audio_video_media = UploadAudioVideoMediaUseCase(
             video_repo=video_repo,
             storage=storage,
@@ -150,8 +161,22 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
             data=VideoViewSet.serialize(output),
         )
 
-    def update(self, request: Request, pk: None):
-        raise NotImplementedError
+    def partial_update(self, request: Request, pk: None):
+        serializer = UpdateVideoInputSerializer(
+            data={
+                **request.data,
+                "id": pk,
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+
+        input = UpdateVideoInput(**serializer.validated_data)
+        output = self.update_use_case.execute(input)
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=VideoViewSet.serialize(output),
+        )
 
     @action(detail=True, methods=["patch"], url_path="upload-video")
     def upload_video(self, request: Request, pk: UUID = None):

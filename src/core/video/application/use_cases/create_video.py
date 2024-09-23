@@ -59,7 +59,7 @@ class CreateVideoUseCase(UseCase):
 
         video = Video.create(input)
 
-        # self.video_repo.insert(video)
+        self.video_repo.insert(video)
 
         return self.__to_output(video)
 

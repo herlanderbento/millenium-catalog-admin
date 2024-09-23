@@ -40,3 +40,19 @@ class UploadAudioVideoMediaInputSerializer(serializers.Serializer):
 
 class UploadImageMediaInputSerializer(serializers.Serializer):
     id = serializers.UUIDField()
+
+class UpdateVideoInputSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    title = serializers.CharField(max_length=255)
+    description = serializers.CharField(max_length=1024)
+    launch_year = serializers.IntegerField()
+    duration = serializers.DecimalField(max_digits=5, decimal_places=2)
+    rating = serializers.ChoiceField(choices=[(r.value, r.name) for r in Rating])
+    opened = serializers.BooleanField()
+    categories_id = SetField(
+        child=serializers.UUIDField(), required=True, allow_empty=True
+    )
+    genres_id = SetField(child=serializers.UUIDField(), required=True, allow_empty=True)
+    cast_members_id = SetField(
+        child=serializers.UUIDField(), required=True, allow_empty=True
+    )

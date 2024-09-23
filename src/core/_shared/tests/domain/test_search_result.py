@@ -1,7 +1,7 @@
 from dataclasses import InitVar
 
 import pytest
-from src.core._shared.domain.repositories.search_paramsimport (
+from src.core._shared.domain.repositories.search_params import (
     Filter,
     SearchParams,
     SortDirection,

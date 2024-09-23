@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Generic, List, Set, Type, TypeVar
+from typing import Dict, Generic, List, Set, Type, TypeVar
 from uuid import UUID
 from src.core._shared.domain.value_objects import ValueObject
 from src.core._shared.domain.exceptions import NotFoundException
@@ -29,6 +29,30 @@ class InMemoryRepository(IRepository[E, EntityId], ABC):
 
     def find_by_ids(self, ids: Set[EntityId]) -> List[E]:
         return [entity for entity in self._items if entity.id in ids]
+    
+    def exists_by_id(self, entity_ids: List[EntityId]) -> Dict[str, List[EntityId]]:
+        if not entity_ids:
+            raise ValueError("entity_ids must be a list with at least one element")
+
+        if not self.items:
+            return {
+                "exists": [],
+                "not_exists": entity_ids,
+            }
+
+        exists_id = set()
+        not_exists_id = set(entity_ids)
+        for entity in self.items:
+            if entity.id in entity_ids:
+                exists_id.add(entity.id)
+                not_exists_id.discard(entity.id)
+
+        return {
+            "exists": list(exists_id),
+            "not_exists": list(not_exists_id),
+        }
+
+
 
     def update(self, entity: E) -> None:
         entity_found = self._get(entity.entity_id)

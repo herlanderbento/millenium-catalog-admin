@@ -15,3 +15,7 @@ class EntityValidationException(Exception):
 class RelatedNotFoundException(Exception):
     def __init__(self, message: str = "Related entity not found"):
         super().__init__(message)
+
+class InvalidArgumentException(Exception):
+    def __init__(self, message):
+        super().__init__(message)

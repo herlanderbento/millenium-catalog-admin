@@ -6,6 +6,15 @@ from rest_framework import status
 from rest_framework.decorators import action
 
 from src.core._shared.application.application_service import ApplicationService
+from src.core.cast_member.application.validations.cast_members_ids_exists_in_database_validator import (
+    CastMembersIdExistsInDatabaseValidator,
+)
+from src.core.category.application.validations.categories_ids_exists_in_database_validator import (
+    CategoriesIdExistsInDatabaseValidator,
+)
+from src.core.genre.application.validations.genres_ids_exists_in_database_validator import (
+    GenresIdExistsInDatabaseValidator,
+)
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
     UploadImageMediaUseCase,
@@ -61,8 +70,10 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         category_repo = CategoryDjangoRepository()
         genre_repo = GenreDjangoRepository()
         cast_member_repo = CastMemberDjangoRepository()
+
         storage = S3Storage()
-        # local_storage = LocalStorage()
+        local_storage = LocalStorage()
+
         uow = UnitOfWork()
 
         app_service = ApplicationService(
@@ -70,11 +81,17 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
             domain_event_mediator=DomainEventMediator(),
         )
 
+        categories_id_validator = CategoriesIdExistsInDatabaseValidator(category_repo)
+        genres_id_validator = GenresIdExistsInDatabaseValidator(genre_repo)
+        cast_members_id_validator = CastMembersIdExistsInDatabaseValidator(
+            cast_member_repo
+        )
+
         self.create_use_case = CreateVideoUseCase(
             video_repo,
-            category_repo,
-            genre_repo,
-            cast_member_repo,
+            categories_id_validator,
+            genres_id_validator,
+            cast_members_id_validator,
         )
         self.get_use_case = GetVideoUseCase(video_repo)
         self.list_use_case = ListVideosUseCase(video_repo)
@@ -84,7 +101,6 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
             storage=storage,
             app_service=app_service,
         )
-
         self.upload_image_media = UploadImageMediaUseCase(video_repo, storage)
 
     def create(self, request: Request) -> Response:

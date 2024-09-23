@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict,List, Set
 import uuid
 
 from django.core.paginator import Paginator
@@ -51,6 +51,9 @@ class VideoDjangoRepository(IVideoRepository):
     def find_all(self) -> List[Video]:
         models = VideoModel.objects.all()
         return [VideoModelMapper.to_entity(model) for model in models]
+
+    def exists_by_id(self, entity_ids: List[VideoId]) -> Dict[str, List[VideoId]]:
+        raise NotImplementedError
 
     def update(self, entity: Video) -> None:
         model = VideoModel.objects.filter(pk=entity.id.value).first()

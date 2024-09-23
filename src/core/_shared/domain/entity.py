@@ -15,9 +15,15 @@ from src.core._shared.domain.validators.notification import Notification
 @dataclass(slots=True)
 class Entity(ABC):
     notification: Notification = field(init=False)
+    events: list[IDomainEvent] = field(default_factory=list, init=False)
+    local_mediator: IIntegrationEvent = field(
+        default_factory=DomainEventMediator, init=False
+    )
 
     def __post_init__(self):
         self.notification = Notification()
+        self.local_mediator = DomainEventMediator()
+
 
     @property
     @abstractmethod
@@ -38,18 +44,11 @@ class Entity(ABC):
             for error in e.errors():
                 self.notification.add_error(error["msg"], str(error["loc"][0]))
 
-
-@dataclass(slots=True)
-class AggregateRoot(Entity):
-
-    events: list[IDomainEvent] = field(default_factory=list, init=False)
-    local_mediator: IIntegrationEvent = field(
-        default_factory=DomainEventMediator, init=False
-    )
-
-    def __post_init__(self):
-        self.local_mediator = DomainEventMediator()
-
     def applyEvent(self, event: IDomainEvent) -> None:
         self.events.append(event)
         self.local_mediator.handle([event])
+
+
+@dataclass(slots=True)
+class AggregateRoot(Entity):
+    pass

@@ -66,7 +66,7 @@ class UploadImageMediaUseCase(UseCase):
         self.storage.store(
             file_path,
             input.content,
-            input.content_type,
+            input.content_type,         
         )
 
         self.video_repo.update(video)

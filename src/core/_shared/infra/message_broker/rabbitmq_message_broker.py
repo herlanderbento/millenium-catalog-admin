@@ -17,7 +17,10 @@ class RabbitMQMessageBroker(IMessageBrokerProducer):
     def publish_event(self, event: IDomainEvent) -> None:
         if not self.connection:
             self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=self.host, credentials=self.credentials)
+                pika.ConnectionParameters(
+                    host=self.host,
+                    credentials=self.credentials,
+                )
             )
             self.channel = self.connection.channel()
             self.channel.queue_declare(queue=self.queue)

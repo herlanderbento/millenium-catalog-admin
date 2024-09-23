@@ -44,7 +44,7 @@ class VideoPresenter(ResourcePresenter):
             launch_year=output.launch_year,
             duration=output.duration,
             rating=(
-                Rating(output.rating)
+                Rating(output.rating.lower())
                 if isinstance(output.rating, str)
                 else output.rating
             ),

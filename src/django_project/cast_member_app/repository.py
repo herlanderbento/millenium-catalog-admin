@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict, List, Set
 from django.core.paginator import Paginator
 
 from src.core._shared.domain.repositories.search_params import SortDirection
@@ -34,13 +34,34 @@ class CastMemberDjangoRepository(ICastMemberRepository):
 
     def find_by_ids(self, ids: Set[CastMemberId]) -> List[CastMember]:
         models = self.cast_member_model.objects.filter(
-            id__in=[str(category_id) for category_id in ids]
+            id__in=[str(castmember_id) for castmember_id in ids]
         )
         return [CastMemberModelMapper.to_entity(model) for model in models]
 
     def find_all(self) -> List[CastMember]:
         models = self.cast_member_model.objects.all()
         return [CastMemberModelMapper.to_entity(model) for model in models]
+    
+    def exists_by_id(self, entity_ids: List[CastMemberId]) -> Dict[str, List[CastMemberId]]:
+        if not entity_ids:
+            raise InvalidArgumentException(
+                "ids must be an array with at least one element"
+            )
+
+        exists_cast_member_models = CastMemberModel.objects.filter(
+            id__in=entity_ids
+        ).values_list("id", flat=True)
+
+        exists_castmember_ids = list(exists_cast_member_models)
+
+        not_exists_cast_member_ids = [
+            id for id in entity_ids if id not in exists_castmember_ids
+        ]
+
+        return {
+            "exists": exists_castmember_ids,
+            "not_exists": not_exists_cast_member_ids,
+        }
 
     def update(self, entity: CastMember) -> None:
         model = CastMemberModelMapper.to_model(entity)

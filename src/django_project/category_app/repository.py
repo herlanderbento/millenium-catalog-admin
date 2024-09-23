@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict, List, Set
 from django.core.paginator import Paginator
 
 from src.core._shared.domain.repositories.search_params import SortDirection
@@ -29,15 +29,36 @@ class CategoryDjangoRepository(ICategoryRepository):
         model = CategoryModel.objects.filter(id=entity_id).first()
         return CategoryModelMapper.to_entity(model) if model else None
 
-    def find_by_ids(self, ids: Set[CategoryId]) -> List[Category]:
+    def find_by_ids(self, entity_ids: Set[CategoryId]) -> List[Category]:
         models = CategoryModel.objects.filter(
-            id__in=[str(category_id) for category_id in ids]
+            id__in=[str(category_id) for category_id in entity_ids]
         )
         return [CategoryModelMapper.to_entity(model) for model in models]
 
     def find_all(self) -> list[Category]:
         models = CategoryModel.objects.all()
         return [CategoryModelMapper.to_entity(model) for model in models]
+
+    def exists_by_id(self, entity_ids: List[CategoryId]) -> Dict[str, List[CategoryId]]:
+        if not entity_ids:
+            raise InvalidArgumentException(
+                "ids must be an array with at least one element"
+            )
+
+        exists_category_models = CategoryModel.objects.filter(
+            id__in=entity_ids
+        ).values_list("id", flat=True)
+
+        exists_category_ids = list(exists_category_models)
+
+        not_exists_category_ids = [
+            id for id in entity_ids if id not in exists_category_ids
+        ]
+
+        return {
+            "exists": exists_category_ids,
+            "not_exists": not_exists_category_ids,
+        }
 
     def update(self, entity: Category) -> None:
         model = CategoryModel.objects.filter(id=entity.id.value).update(

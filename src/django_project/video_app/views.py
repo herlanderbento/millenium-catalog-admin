@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 
+from src.core.category.application.validations.categories_ids_exists_in_database_validator import CategoriesIdExistsInDatabaseValidator
 from src.core._shared.application.application_service import ApplicationService
 from src.core.video.application.use_cases.upload_image_media import (
     UploadImageMediaInput,
@@ -64,6 +65,7 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
         storage = S3Storage()
         # local_storage = LocalStorage()
         uow = UnitOfWork()
+        categories_id_validator = CategoriesIdExistsInDatabaseValidator(category_repo)
 
         app_service = ApplicationService(
             uow=uow,
@@ -72,7 +74,7 @@ class VideoViewSet(viewsets.ViewSet, FilterExtractor):
 
         self.create_use_case = CreateVideoUseCase(
             video_repo,
-            category_repo,
+            categories_id_validator,
             genre_repo,
             cast_member_repo,
         )

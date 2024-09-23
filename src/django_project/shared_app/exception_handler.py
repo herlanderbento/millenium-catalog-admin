@@ -4,12 +4,14 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_400_BAD_REQUEST
 )
 
 from src.core._shared.domain.exceptions import (
     EntityValidationException,
     NotFoundException,
     RelatedNotFoundException,
+    InvalidArgumentException,
 )
 
 
@@ -41,10 +43,16 @@ def handle_related_not_found_error(exc: RelatedNotFoundException, context):
     return response
 
 
+def handle_invalid_argument_error(exc: InvalidArgumentException, context):
+    response = Response({"message": exc.args[0]}, HTTP_400_BAD_REQUEST)
+    return response
+
+
 handlers = [
     {"exception": ValidationError, "handle": handle_validation_error},
     {"exception": EntityValidationException, "handle": handle_entity_validation_error},
     {"exception": NotFoundException, "handle": handle_not_found_error},
+    {"exception": InvalidArgumentException, "handle": handle_invalid_argument_error},
     {
         "exception": RelatedNotFoundException,
         "handle": handle_related_not_found_error,
